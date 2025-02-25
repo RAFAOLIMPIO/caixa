@@ -5,7 +5,7 @@ session_start();
 $host = 'sistema-caixa.cpqiw2qka4z1.sa-east-1.rds.amazonaws.com'; // Endpoint do RDS
 $user = 'admin'; // Nome de usuário do RDS
 $password = 'Melancia09'; // Senha do RDS
-$database = 'sistema-caixa'; // Nome do banco de dados
+$database = 'sistema_loja'; // Nome do banco de dados
 
 try {
     $pdo = new PDO(
