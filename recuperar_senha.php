@@ -140,7 +140,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
         <?php endif; ?>
 
         <div class="links">
-            <a href="login.php" class="btn btn-secondary">← Voltar para Login</a>
+            <a href="index.php" class="btn btn-secondary">← Voltar para Login</a>
         </div>
     </div>
 </body>
