@@ -143,7 +143,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
             <button type="submit" class="btn btn-primary">Criar Conta</button>
             
             <div class="links">
-                <a href="login.php" class="btn btn-secondary">Já tem conta? Faça login</a>
+                <a href="index.php" class="btn btn-secondary">Já tem conta? Faça login</a>
             </div>
         </form>
     </div>
