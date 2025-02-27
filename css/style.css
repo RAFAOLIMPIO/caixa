@@ -1,9 +1,9 @@
 :root {
-    --primary-gradient: linear-gradient(135deg, #e98a1d, #ff0000);
+    --primary-gradient: linear-gradient(135deg, #e98a1d, #ff4500); 
     --secondary-color: #FF4B2B;
     --text-color: #0a0a0a;
-    --background-light: #fff;
-    --shadow: 0 4px 6px rgb(0, 0, 0);
+    --background-light: #ffffff;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     --transition: all 0.3s ease;
 }
 
@@ -15,11 +15,14 @@
 }
 
 body {
-    background: var(--primary-gradient);
+    background: linear-gradient(135deg, #f0f0f0, #e4e4e4); /* Fundo mais uniforme e sem contraste forte */
     min-height: 100vh;
     color: var(--text-color);
     line-height: 1.6;
     padding: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     animation: fadeIn 0.5s ease-in;
 }
 
@@ -29,14 +32,20 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1300px; /* Aumentei a largura */
     margin: 2rem auto;
     background: var(--background-light);
-    border-radius: 15px;
+    border-radius: 20px;
     box-shadow: var(--shadow);
-    padding: 2.5rem;
-    position: relative;
+    padding: 3rem;
     overflow: hidden;
+    animation: fadeIn 0.6s ease;
+    transition: var(--transition);
+    position: relative;
+}
+
+.container:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 .container::before {
@@ -51,40 +60,20 @@ body {
 
 h1, h2, h3 {
     color: #FF416C;
-    margin-bottom: 1.5rem;
-    position: relative;
-}
-
-h1::after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    left: 0;
-    width: 60px;
-    height: 4px;
-    background: var(--primary-gradient);
-    border-radius: 2px;
+    text-align: center;
+    margin-bottom: 1.8rem;
+    font-size: 2rem;
+    text-transform: uppercase;
 }
 
 .alert {
-    padding: 1.2rem;
-    border-radius: 8px;
+    padding: 1.5rem;
+    border-radius: 10px;
     margin: 1.5rem 0;
     display: flex;
     align-items: center;
     gap: 1rem;
     animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-    from { transform: translateX(-20px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-
-.alert-error {
-    background: #FEE;
-    border: 2px solid #FF4444;
-    color: #CC0000;
 }
 
 .alert-success {
@@ -93,58 +82,50 @@ h1::after {
     color: #2E7D32;
 }
 
-.form-group {
-    margin-bottom: 1.8rem;
-    position: relative;
+.alert-error {
+    background: #FEE;
+    border: 2px solid #FF4444;
+    color: #CC0000;
 }
 
 input:not([type="checkbox"]),
 select,
 textarea {
     width: 100%;
-    padding: 12px 15px;
+    padding: 14px;
     border: 2px solid #ddd;
-    border-radius: 8px;
-    font-size: 1rem;
+    border-radius: 12px;
     transition: var(--transition);
+    margin-bottom: 1.5rem;
 }
 
 input:focus,
 select:focus {
-    outline: none;
     border-color: #FF416C;
-    box-shadow: 0 0 0 3px rgba(255, 65, 108, 0.2);
-}
-
-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: #555;
+    box-shadow: 0 0 0 4px rgba(255, 65, 108, 0.3);
+    outline: none;
 }
 
 .btn {
-    padding: 12px 25px;
+    padding: 14px 30px;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
     font-weight: 600;
     transition: var(--transition);
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
 }
 
 .btn-primary {
     background: var(--primary-gradient);
     color: white;
-    position: relative;
-    overflow: hidden;
 }
 
 .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255, 75, 43, 0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(255, 75, 43, 0.4);
 }
 
 .btn-secondary {
@@ -153,39 +134,33 @@ label {
 }
 
 .btn-secondary:hover {
-    background: #e0e0e0;
-}
-
-.grid {
-    display: grid;
-    gap: 2rem;
-    margin-top: 2rem;
+    background: #d6d6d6;
 }
 
 .card {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 15px;
     box-shadow: var(--shadow);
     transition: var(--transition);
-    border-left: 4px solid #FF416C;
 }
 
 .card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-8px);
 }
 
 .table {
     width: 100%;
     border-collapse: collapse;
-    margin: 2rem 0;
+    margin-top: 2rem;
+    text-align: center;
 }
 
 .table th,
 .table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
 }
 
 .table th {
@@ -193,108 +168,33 @@ label {
     color: #FF416C;
 }
 
-.links {
-    margin-top: 1.5rem;
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
+.table tr:hover {
+    background: #f2f2f2;
 }
 
-.dinheiro-section {
-    background: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin: 1rem 0;
-    animation: expand 0.3s ease-out;
-}
-
-@keyframes expand {
-    from { max-height: 0; opacity: 0; }
-    to { max-height: 500px; opacity: 1; }
-}
-
-/* Ícones e elementos decorativos */
-.btn i {
-    font-size: 1.1rem;
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-    .grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .container {
-        padding: 1.5rem;
-        margin: 1rem;
-    }
-    
-    body {
-        padding: 1rem;
-    }
-}
-
-/* Animações personalizadas */
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-.pulse:hover {
-    animation: pulse 1s infinite;
-}
-
-/* Estilo para checkbox personalizado */
 input[type="checkbox"] {
     width: 20px;
     height: 20px;
     accent-color: #FF416C;
 }
 
-/* Estilo para cards de login/cadastro */
 .auth-container {
-    max-width: 500px;
+    max-width: 600px;
     margin: 4rem auto;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.98);
     border-radius: 20px;
     overflow: hidden;
 }
 
 .auth-container h1 {
-    text-align: center;
     padding: 2rem;
     background: var(--primary-gradient);
     color: white;
-    margin: 0;
 }
 
-.auth-container h1::after {
-    display: none;
-}
-
-/* Melhorias nos formulários de login */
-.password-container {
-    position: relative;
-}
-
-.password-toggle {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    color: #666;
-}
-
-/* Efeito de hover nos cards */
-.card-link {
-    display: block;
-    text-decoration: none;
-    color: inherit;
-}
-
-.card-link:hover .card {
-    background: #fff5f5;
+@media (max-width: 768px) {
+    .container {
+        padding: 2rem;
+        width: 90%;
+    }
 }
