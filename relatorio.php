@@ -32,46 +32,25 @@ if (isset($_GET['action'])) {
         header("Location: relatorio.php");
         exit();
     }
-
-    // EDITAR
-    if ($_GET['action'] === 'edit' && isset($_GET['id'])) {
-        // ... (código de edição mantido)
-    }
 }
 
 // =============================================
-// BUSCAR DADOS (COM VERIFICAÇÃO DE ERROS)
+// BUSCAR DADOS
 // =============================================
 try {
-    // Buscar vendas com JOIN seguro
     $stmt_vendas = $pdo->prepare("SELECT 
-        v.*,
+        v.*, 
         DATE_FORMAT(v.criado_em, '%d/%m/%Y %H:%i') as data_formatada,
         COALESCE(f.nome, 'Não informado') as autozoner_nome
         FROM vendas v
         LEFT JOIN funcionarios f ON v.autozoner_id = f.id AND f.tipo = 'autozoner'
         WHERE v.loja_id = ?
         ORDER BY v.criado_em DESC");
-    
+
     $stmt_vendas->execute([$loja_id]);
     $vendas = $stmt_vendas->fetchAll();
-
-    // Buscar autozoners
-    $stmt_autozoners = $pdo->prepare("SELECT id, nome 
-        FROM funcionarios 
-        WHERE loja_id = ? AND tipo = 'autozoner'");
-    $stmt_autozoners->execute([$loja_id]);
-    $autozoners = $stmt_autozoners->fetchAll();
-
-    // Buscar motoboys
-    $stmt_motoboys = $pdo->prepare("SELECT nome 
-        FROM funcionarios 
-        WHERE loja_id = ? AND tipo = 'motoboy'");
-    $stmt_motoboys->execute([$loja_id]);
-    $motoboys = $stmt_motoboys->fetchAll(PDO::FETCH_COLUMN);
-
 } catch (PDOException $e) {
-    die("Erro ao buscar dados: Verifique a conexão com o banco de dados. Detalhes: " . $e->getMessage());
+    die("Erro ao buscar dados: " . $e->getMessage());
 }
 
 // Mensagens de sucesso
@@ -85,25 +64,53 @@ if (isset($_SESSION['sucesso'])) {
 <head>
     <meta charset="UTF-8">
     <title>Relatório de Vendas</title>
-    <!-- Incluindo o arquivo CSS -->
     <link rel="stylesheet" type="text/css" href="css/style.css">
     <style>
-        .status-pago {
-            transform: scale(1.3);
-            cursor: pointer;
+        .container {
+            width: 80%;
+            margin: auto;
+            text-align: center;
         }
-        .status-text {
-            margin-left: 8px;
+
+        .btn {
             display: inline-block;
-            min-width: 70px;
+            padding: 10px 15px;
+            margin: 10px;
+            text-decoration: none;
+            color: white;
+            background-color: #007bff;
+            border-radius: 5px;
+            transition: 0.3s;
         }
-        .card.pago {
-            background: #e8f5e9;
-            border-left: 4px solid #4CAF50;
+
+        .btn:hover {
+            background-color: #0056b3;
         }
-        .card.pago .status {
-            color: #4CAF50;
-            font-weight: bold;
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 15px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f4f4f4;
+            font-size: 16px;
+        }
+
+        td {
+            font-size: 15px;
+        }
+
+        .acoes a {
+            margin: 5px;
+            padding: 8px 12px;
         }
     </style>
 </head>
