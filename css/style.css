@@ -17,7 +17,7 @@
 body {
     background: radial-gradient(circle, rgba(50, 50, 50, 0.9) 0%, rgba(20, 20, 20, 1) 100%);
     min-height: 100vh;
-    color: white; /* Mantém a cor do texto principal branca */
+    color: var(--text-color);
     line-height: 1.6;
     padding: 2rem;
     display: flex;
@@ -25,55 +25,35 @@ body {
     align-items: center;
     justify-content: center;
     position: relative;
-    overflow: hidden;
-    animation: fadeIn 0.5s ease-in;
+    overflow-y: auto; /* Permite rolagem */
 }
 
-/* Efeito de fundo animado */
-@keyframes floatingBackground {
-    0% { transform: translateY(0px) rotate(0deg); opacity: 0.5; }
-    50% { transform: translateY(-30px) rotate(3deg); opacity: 0.7; }
-    100% { transform: translateY(0px) rotate(0deg); opacity: 0.5; }
-}
-
-.floating-bg {
-    position: absolute;
-    width: 150%;
-    height: 150%;
-    background: radial-gradient(circle, rgba(255, 100, 100, 0.1) 0%, rgba(255, 50, 50, 0) 50%);
-    top: -20%;
-    left: -20%;
-    pointer-events: none;
-    animation: floatingBackground 6s infinite ease-in-out;
-}
-
-/* Ajuste para Login */
-.auth-container {
-    max-width: 500px;
-    margin: 3rem auto;
-    background: rgba(255, 255, 255, 0.15); /* Fundo translúcido */
+/* Container principal */
+.container {
+    max-width: 600px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
     border-radius: 20px;
     overflow: hidden;
     padding: 2rem;
     text-align: center;
     box-shadow: var(--shadow);
+    margin-bottom: 2rem;
 }
 
-.auth-container h1 {
+/* Estilizando o título "Login" na index.php */
+h1.title-login {
+    background: var(--primary-gradient); /* Degradê laranja-vermelho */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 2rem;
+    font-weight: bold;
     text-align: center;
-    padding: 1.5rem;
-    background: var(--primary-gradient);
-    color: white;
-    margin: 0;
-    border-radius: 20px 20px 0 0;
+    margin-bottom: 1.5rem;
 }
 
-.auth-container h1::after {
-    display: none;
-}
-
-/* Estilização dos rótulos e inputs */
+/* Formulários */
 .form-group {
     margin-bottom: 1.8rem;
     position: relative;
@@ -97,47 +77,46 @@ select:focus {
     box-shadow: 0 0 0 3px rgba(255, 65, 108, 0.2);
 }
 
-/* Ajuste para textos ficarem brancos */
-label, input[type="checkbox"], .form-group label {
-    color: white !important;
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #555;
 }
 
-/* Estilização do botão */
-button {
-    padding: 12px 20px;
+/* Botões */
+.btn {
+    padding: 12px 25px;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     font-weight: 600;
-    background: var(--primary-gradient);
-    color: white;
     transition: var(--transition);
-    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
-button:hover {
+.btn-primary {
+    background: var(--primary-gradient);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(255, 75, 43, 0.3);
 }
 
-/* Estilização de links */
-a {
-    color: #ff4b2b;
-    text-decoration: none;
-    transition: var(--transition);
-}
-
-a:hover {
-    text-decoration: underline;
-}
-
-/* Responsividade */
+/* Ajuste para telas menores */
 @media (max-width: 768px) {
+    .container {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+    
     body {
         padding: 1rem;
-    }
-
-    .auth-container {
-        padding: 1.5rem;
     }
 }
