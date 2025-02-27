@@ -1,16 +1,15 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-session_start();
-include 'includes/config.php';
+ob_start(); // Inicia o buffer de saída para evitar erro de cabeçalhos
+require 'includes/config.php';
 
-$etapa = $_GET['etapa'] ?? ($_SESSION['recuperacao']['etapa'] ?? 1);
+$etapa = isset($_GET['etapa']) ? (int) $_GET['etapa'] : 1;
 $erros = [];
 $sucesso = '';
 
+// Processar recuperação de senha
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($etapa == 1) {
-        $numero_loja = trim($_POST['numero_loja'] ?? '');
+        $numero_loja = sanitizar($_POST['numero_loja'] ?? '');
 
         try {
             $stmt = $pdo->prepare("SELECT pergunta_seguranca FROM usuarios WHERE numero_loja = ?");
@@ -31,9 +30,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } catch (PDOException $e) {
             $erros[] = "Erro no sistema: " . $e->getMessage();
         }
-    } 
+    }
     elseif ($etapa == 2) {
-        $resposta = trim($_POST['resposta'] ?? '');
+        if (!isset($_SESSION['recuperacao'])) {
+            header("Location: recuperar_senha.php");
+            exit();
+        }
+
+        $resposta = sanitizar($_POST['resposta'] ?? '');
 
         try {
             $stmt = $pdo->prepare("SELECT resposta_seguranca FROM usuarios WHERE numero_loja = ?");
@@ -50,10 +54,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } catch (PDOException $e) {
             $erros[] = "Erro no sistema: " . $e->getMessage();
         }
-    } 
+    }
     elseif ($etapa == 3) {
-        $nova_senha = trim($_POST['nova_senha'] ?? '');
-        $confirmar_senha = trim($_POST['confirmar_senha'] ?? '');
+        if (!isset($_SESSION['recuperacao'])) {
+            header("Location: recuperar_senha.php");
+            exit();
+        }
+
+        $nova_senha = sanitizar($_POST['nova_senha'] ?? '');
+        $confirmar_senha = sanitizar($_POST['confirmar_senha'] ?? '');
 
         if (strlen($nova_senha) < 8) {
             $erros[] = "A senha deve ter pelo menos 8 caracteres!";
@@ -70,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $stmt = $pdo->prepare("UPDATE usuarios SET senha = ? WHERE numero_loja = ?");
                 if ($stmt->execute([$senha_hash, $_SESSION['recuperacao']['numero_loja']])) {
                     unset($_SESSION['recuperacao']);
-                    $sucesso = "Senha alterada com sucesso! Redirecionando...";
+                    $sucesso = "Senha alterada com sucesso! Redirecionando para login...";
                     header("refresh:3;url=login.php");
                 }
             } catch (PDOException $e) {
@@ -112,11 +121,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <button type="submit" class="btn btn-primary">Continuar</button>
             </form>
 
-        <?php elseif ($etapa == 2): ?>
+        <?php elseif ($etapa == 2 && isset($_SESSION['recuperacao'])): ?>
             <form method="POST">
                 <div class="form-group">
                     <label>Pergunta de Segurança:</label>
-                    <p><strong><?= htmlspecialchars($_SESSION['recuperacao']['pergunta'] ?? 'Pergunta não encontrada') ?></strong></p>
+                    <p><strong><?= $_SESSION['recuperacao']['pergunta'] ?></strong></p>
                 </div>
                 <div class="form-group">
                     <label>Resposta:</label>
@@ -125,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <button type="submit" class="btn btn-primary">Verificar</button>
             </form>
 
-        <?php elseif ($etapa == 3): ?>
+        <?php elseif ($etapa == 3 && isset($_SESSION['recuperacao'])): ?>
             <form method="POST">
                 <div class="form-group">
                     <label>Nova Senha:</label>
