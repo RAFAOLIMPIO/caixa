@@ -25,7 +25,7 @@ body {
     align-items: center;
     justify-content: center;
     position: relative;
-    overflow-y: auto; /* Permite rolagem */
+    overflow-y: auto;
 }
 
 /* Container principal */
@@ -42,9 +42,9 @@ body {
     margin-bottom: 2rem;
 }
 
-/* Estilizando o título "Login" na index.php */
+/* Estilizando o título "Login" */
 h1.title-login {
-    background: var(--primary-gradient); /* Degradê laranja-vermelho */
+    background: var(--primary-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-size: 2rem;
@@ -109,33 +109,22 @@ label {
     box-shadow: 0 5px 15px rgba(255, 75, 43, 0.3);
 }
 
-/* Ajuste para telas menores */
-@media (max-width: 768px) {
-    .container {
-        padding: 1.5rem;
-        margin: 1rem;
-    }
-    
-    body {
-        padding: 1rem;
-    }
-}
-
-/* ANIMAÇÃO DO CARRINHO PIXEL ART */
+/* CENA DO CARRINHO */
 .cena {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 150px;
+    background: #228B22; /* Fundo verde simulando grama */
     display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    background: linear-gradient(to bottom, #87CEEB 50%, #228B22 50%);
+    align-items: center;
+    overflow: hidden;
 }
 
-/* Carrinho pixel art */
+/* CARRINHO PIXEL ART */
 .carrinho {
     position: absolute;
-    bottom: 50px;
+    bottom: 20px;
     width: 80px;
     height: 40px;
     background-color: red;
@@ -169,6 +158,18 @@ label {
         left: -100px;
     }
     to {
-        left: 100vw;
+        left: 100%;
+    }
+}
+
+/* Ajuste para telas menores */
+@media (max-width: 768px) {
+    .container {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+    
+    body {
+        padding: 1rem;
     }
 }
