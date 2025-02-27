@@ -120,3 +120,55 @@ label {
         padding: 1rem;
     }
 }
+
+/* ANIMAÇÃO DO CARRINHO PIXEL ART */
+.cena {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background: linear-gradient(to bottom, #87CEEB 50%, #228B22 50%);
+}
+
+/* Carrinho pixel art */
+.carrinho {
+    position: absolute;
+    bottom: 50px;
+    width: 80px;
+    height: 40px;
+    background-color: red;
+    border-radius: 10px;
+    border: 2px solid black;
+    animation: mover 5s linear infinite alternate;
+}
+
+/* Rodas do carrinho */
+.carrinho::before, .carrinho::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: black;
+    border-radius: 50%;
+    bottom: -10px;
+}
+
+.carrinho::before {
+    left: 5px;
+}
+
+.carrinho::after {
+    right: 5px;
+}
+
+/* Animação do carrinho indo e voltando */
+@keyframes mover {
+    from {
+        left: -100px;
+    }
+    to {
+        left: 100vw;
+    }
+}
