@@ -1,91 +1,254 @@
-/* Layout da tela inicial */
-.tela-inicial {
+:root {
+    --primary-gradient: linear-gradient(135deg, #e98a1d, #ff0000);
+    --secondary-color: #FF4B2B;
+    --text-color: #0a0a0a;
+    --background-light: rgba(255, 255, 255, 0.95);
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+body {
+    background: radial-gradient(circle, rgba(50, 50, 50, 0.9) 0%, rgba(20, 20, 20, 1) 100%);
+    min-height: 100vh;
+    color: var(--text-color);
+    line-height: 1.6;
+    padding: 2rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    max-width: 1300px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn 0.5s ease-in;
+}
+
+/* Efeito de fundo animado */
+@keyframes floatingBackground {
+    0% { transform: translateY(0px) rotate(0deg); opacity: 0.5; }
+    50% { transform: translateY(-30px) rotate(3deg); opacity: 0.7; }
+    100% { transform: translateY(0px) rotate(0deg); opacity: 0.5; }
+}
+
+.floating-bg {
+    position: absolute;
+    width: 150%;
+    height: 150%;
+    background: radial-gradient(circle, rgba(255, 100, 100, 0.1) 0%, rgba(255, 50, 50, 0) 50%);
+    top: -20%;
+    left: -20%;
+    pointer-events: none;
+    animation: floatingBackground 6s infinite ease-in-out;
+}
+
+/* Container principal */
+.container {
+    max-width: 1200px;
     margin: 2rem auto;
-    gap: 2rem;
-}
-
-/* Estilizando o login para ficar acima */
-.login-box {
-    width: 100%;
-    max-width: 500px; /* Define um tamanho máximo para o login */
-    background: rgba(255, 255, 255, 0.98);
-    border-radius: 20px;
-    box-shadow: var(--shadow);
-    padding: 2.5rem;
-    text-align: center;
-    animation: fadeIn 0.5s ease-in-out;
-}
-
-/* Títulos do login */
-.login-box h1 {
-    font-size: 1.8rem;
-    color: var(--secondary-color);
-    margin-bottom: 1rem;
-}
-
-/* Inputs do login */
-.login-box input {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
-    border-radius: 10px;
-    border: 2px solid #ddd;
-    transition: var(--transition);
-}
-
-.login-box input:focus {
-    border-color: #FF416C;
-    box-shadow: 0 0 0 4px rgba(255, 65, 108, 0.3);
-}
-
-/* Botão do login */
-.login-box .btn-primary {
-    width: 100%;
-    margin-top: 10px;
-}
-
-/* Estilizando as caixas abaixo do login */
-.caixas-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1.5rem;
-    width: 100%;
-}
-
-/* Cada caixa da tela inicial */
-.caixa {
-    background: white;
-    padding: 1.8rem;
+    background: var(--background-light);
     border-radius: 15px;
     box-shadow: var(--shadow);
-    transition: var(--transition);
-    text-align: center;
-    width: 300px;
+    padding: 2.5rem;
+    position: relative;
+    overflow: hidden;
+    animation: glowing 5s infinite ease-in-out;
 }
 
-.caixa:hover {
-    transform: translateY(-5px);
+/* Animação de brilho suave */
+@keyframes glowing {
+    0% { box-shadow: 0 0 10px rgba(255, 50, 50, 0.2); }
+    50% { box-shadow: 0 0 40px rgba(255, 50, 50, 0.5); }
+    100% { box-shadow: 0 0 10px rgba(255, 50, 50, 0.2); }
+}
+
+h1, h2, h3 {
+    color: #FF416C;
+    margin-bottom: 1.5rem;
+    position: relative;
+    text-align: center;
+}
+
+h1::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: var(--primary-gradient);
+    border-radius: 2px;
+}
+
+/* Alertas */
+.alert {
+    padding: 1.2rem;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.alert-error {
+    background: #FEE;
+    border: 2px solid #FF4444;
+    color: #CC0000;
+}
+
+.alert-success {
+    background: #E8F5E9;
+    border: 2px solid #4CAF50;
+    color: #2E7D32;
+}
+
+/* Formulários */
+.form-group {
+    margin-bottom: 1.8rem;
+    position: relative;
+}
+
+input:not([type="checkbox"]),
+select,
+textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: #FF416C;
+    box-shadow: 0 0 0 3px rgba(255, 65, 108, 0.2);
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #555;
+}
+
+/* Botões */
+.btn {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: var(--primary-gradient);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 75, 43, 0.3);
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: #666;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+}
+
+/* Grid Layout */
+.grid {
+    display: grid;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+/* Tabelas */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+}
+
+.table th,
+.table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.table th {
+    background: #f8f9fa;
+    color: #FF416C;
+}
+
+/* Estilização da Tela de Login */
+.auth-container {
+    max-width: 500px;
+    margin: 3rem auto;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    overflow: hidden;
+    padding: 2rem;
+    text-align: center;
+}
+
+.auth-container h1 {
+    text-align: center;
+    padding: 1.5rem;
+    background: var(--primary-gradient);
+    color: white;
+    margin: 0;
+    border-radius: 20px 20px 0 0;
+}
+
+.auth-container h1::after {
+    display: none;
+}
+
+/* Ajuste para o login ficar acima */
+.auth-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 /* Responsividade */
 @media (max-width: 768px) {
-    .tela-inicial {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .container {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+    
+    body {
         padding: 1rem;
-    }
-    
-    .caixas-container {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .caixa {
-        width: 100%;
     }
 }
