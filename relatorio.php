@@ -11,32 +11,7 @@ $loja_id = (int)$_SESSION['usuario']['id'];
 $erros = [];
 $sucesso = '';
 $vendas = [];
-$autozoners = [];
-$motoboys = [];
-$editing = false;
 
-// =============================================
-// PROCESSAR AÇÕES (DELETE, EDITAR)
-// =============================================
-if (isset($_GET['action'])) {
-    // DELETE
-    if ($_GET['action'] === 'delete' && isset($_GET['id'])) {
-        $id = (int)$_GET['id'];
-        try {
-            $stmt = $pdo->prepare("DELETE FROM vendas WHERE id = ? AND loja_id = ?");
-            $stmt->execute([$id, $loja_id]);
-            $_SESSION['sucesso'] = "Venda excluída com sucesso!";
-        } catch (PDOException $e) {
-            $erros[] = "Erro ao excluir: " . $e->getMessage();
-        }
-        header("Location: relatorio.php");
-        exit();
-    }
-}
-
-// =============================================
-// BUSCAR DADOS
-// =============================================
 try {
     $stmt_vendas = $pdo->prepare("SELECT 
         v.*, 
@@ -53,7 +28,6 @@ try {
     die("Erro ao buscar dados: " . $e->getMessage());
 }
 
-// Mensagens de sucesso
 if (isset($_SESSION['sucesso'])) {
     $sucesso = $_SESSION['sucesso'];
     unset($_SESSION['sucesso']);
@@ -66,16 +40,25 @@ if (isset($_SESSION['sucesso'])) {
     <title>Relatório de Vendas</title>
     <link rel="stylesheet" type="text/css" href="css/style.css">
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            text-align: center;
+        }
+
         .container {
             width: 80%;
-            margin: auto;
-            text-align: center;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
         }
 
         .btn {
             display: inline-block;
             padding: 10px 15px;
-            margin: 10px;
+            margin: 10px 5px;
             text-decoration: none;
             color: white;
             background-color: #007bff;
@@ -91,11 +74,12 @@ if (isset($_SESSION['sucesso'])) {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            text-align: center;
         }
 
         th, td {
             border: 1px solid #ddd;
-            padding: 15px;
+            padding: 12px;
             text-align: center;
         }
 
@@ -108,8 +92,13 @@ if (isset($_SESSION['sucesso'])) {
             font-size: 15px;
         }
 
+        .acoes {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
         .acoes a {
-            margin: 5px;
             padding: 8px 12px;
         }
     </style>
