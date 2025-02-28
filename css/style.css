@@ -40,6 +40,8 @@ body {
     text-align: center;
     box-shadow: var(--shadow);
     margin-bottom: 2rem;
+    min-height: 300px; /* Evita cortes de conteúdo */
+    overflow-y: auto; /* Adiciona rolagem se necessário */
 }
 
 /* Estilizando o título "Login" */
@@ -167,6 +169,7 @@ label {
     .container {
         padding: 1.5rem;
         margin: 1rem;
+        min-height: 250px; /* Garante que não corte o conteúdo */
     }
     
     body {
