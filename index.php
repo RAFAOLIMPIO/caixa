@@ -46,22 +46,15 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <!-- Incluindo o arquivo CSS -->
     <link rel="stylesheet" type="text/css" href="css/style.css">
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 400px; margin: 50px auto; padding: 20px; }
-        .erro { color: red; padding: 10px; border: 1px solid red; margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; }
-        input[type="text"], input[type="password"] { width: 100%; padding: 8px; }
-        button { padding: 10px 20px; background:rgb(255, 0, 0); color: white; border: none; cursor: pointer; }
-        a { color:rgb(0, 4, 255); text-decoration: none; }
-    </style>
 </head>
 <body>
-    <h1>Login</h1>
+    <h1 class="title-login">Login</h1>
     
     <?php if($erro): ?>
         <div class="erro"><?= $erro ?></div>
@@ -90,5 +83,35 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
             <a href="criar_conta.php">Criar conta</a>
         </div>
     </form>
+
+    <!-- Cena do Carrinho -->
+    <div class="cena">
+        <div class="carrinho">
+            <div class="roda roda-esquerda"></div>
+            <div class="roda roda-direita"></div>
+        </div>
+    </div>
+
+    <!-- Script para animação do carrinho -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const carrinho = document.querySelector(".carrinho");
+            let posicao = -100;
+            let velocidade = 3;
+
+            function moverCarrinho() {
+                posicao += velocidade;
+                carrinho.style.left = posicao + "px";
+
+                if (posicao > window.innerWidth) {
+                    posicao = -100;
+                }
+
+                requestAnimationFrame(moverCarrinho);
+            }
+
+            moverCarrinho();
+        });
+    </script>
 </body>
 </html>
