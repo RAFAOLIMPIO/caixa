@@ -84,34 +84,6 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
     </form>
 
-    <!-- Cena do Carrinho -->
-    <div class="cena">
-        <div class="carrinho">
-            <div class="roda roda-esquerda"></div>
-            <div class="roda roda-direita"></div>
-        </div>
-    </div>
-
-    <!-- Script para animação do carrinho -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const carrinho = document.querySelector(".carrinho");
-            let posicao = -100;
-            let velocidade = 3;
-
-            function moverCarrinho() {
-                posicao += velocidade;
-                carrinho.style.left = posicao + "px";
-
-                if (posicao > window.innerWidth) {
-                    posicao = -100;
-                }
-
-                requestAnimationFrame(moverCarrinho);
-            }
-
-            moverCarrinho();
-        });
     </script>
 </body>
 </html>
