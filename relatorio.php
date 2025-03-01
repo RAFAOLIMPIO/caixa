@@ -46,11 +46,13 @@ if (isset($_SESSION['sucesso'])) {
             text-align: center;
         }
 
+        /* Container ampliado */
         .container {
-            width: 80%;
-            margin: 20px auto;
+            width: 90%;             /* Aumenta a largura para 90% da tela */
+            max-width: 1000px;      /* Define uma largura máxima de 1000px para telas grandes */
+            margin: 20px auto;      /* Centraliza horizontalmente com margem de 20px */
             background: white;
-            padding: 20px;
+            padding: 30px;          /* Aumenta o espaçamento interno */
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
         }
