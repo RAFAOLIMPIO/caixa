@@ -10,8 +10,55 @@ if (!isset($_SESSION['usuario'])) {
 $loja_id = (int)$_SESSION['usuario']['id'];
 $erros = [];
 $sucesso = '';
-$vendas = [];
 
+// Processar exclusão se action=delete e id estiverem na URL
+if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
+    $id = (int)$_GET['id'];
+    try {
+        $stmt_delete = $pdo->prepare("DELETE FROM vendas WHERE id = ? AND loja_id = ?");
+        $stmt_delete->execute([$id, $loja_id]);
+        $_SESSION['sucesso'] = "Venda excluída com sucesso.";
+    } catch (PDOException $e) {
+        $_SESSION['erro'] = "Erro ao excluir a venda: " . $e->getMessage();
+    }
+    header("Location: relatorio.php");
+    exit();
+}
+
+// Processar atualização se o formulário de edição for submetido
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update') {
+    $id = (int)$_POST['id'];
+    $cliente = $_POST['cliente'] ?? '';
+    $valor = $_POST['valor'] ?? '';
+    $forma_pagamento = $_POST['forma_pagamento'] ?? '';
+    $motoboy = $_POST['motoboy'] ?? '';
+    try {
+        $stmt_update = $pdo->prepare("UPDATE vendas SET cliente = ?, valor = ?, forma_pagamento = ?, motoboy = ? WHERE id = ? AND loja_id = ?");
+        $stmt_update->execute([$cliente, $valor, $forma_pagamento, $motoboy, $id, $loja_id]);
+        $_SESSION['sucesso'] = "Venda atualizada com sucesso.";
+    } catch (PDOException $e) {
+        $_SESSION['erro'] = "Erro ao atualizar a venda: " . $e->getMessage();
+    }
+    header("Location: relatorio.php");
+    exit();
+}
+
+// Se for solicitado editar, buscar os dados da venda para preencher o formulário
+$editSale = null;
+if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) {
+    $id = (int)$_GET['id'];
+    $stmt = $pdo->prepare("SELECT * FROM vendas WHERE id = ? AND loja_id = ?");
+    $stmt->execute([$id, $loja_id]);
+    $editSale = $stmt->fetch();
+    if (!$editSale) {
+        $_SESSION['erro'] = "Venda não encontrada.";
+        header("Location: relatorio.php");
+        exit();
+    }
+}
+
+// Buscar as vendas para exibição na tabela
+$vendas = [];
 try {
     $stmt_vendas = $pdo->prepare("SELECT 
         v.*, 
@@ -21,11 +68,15 @@ try {
         LEFT JOIN funcionarios f ON v.autozoner_id = f.id AND f.tipo = 'autozoner'
         WHERE v.loja_id = ?
         ORDER BY v.criado_em DESC");
-
     $stmt_vendas->execute([$loja_id]);
     $vendas = $stmt_vendas->fetchAll();
 } catch (PDOException $e) {
     die("Erro ao buscar dados: " . $e->getMessage());
+}
+
+if (isset($_SESSION['erro'])) {
+    $erros[] = $_SESSION['erro'];
+    unset($_SESSION['erro']);
 }
 
 if (isset($_SESSION['sucesso'])) {
@@ -45,18 +96,16 @@ if (isset($_SESSION['sucesso'])) {
             background-color: #f8f9fa;
             text-align: center;
         }
-
         /* Container ampliado */
         .container {
-            width: 95%;             /* Aumenta a largura para 95% da tela */
-            max-width: 1000px;      /* Define uma largura máxima de 1000px para telas grandes */
-            margin: 20px auto;      /* Centraliza horizontalmente com margem de 25px */
+            width: 100%;             /* Ocupa 90% da largura da tela */
+            max-width: 1000px;      /* Largura máxima de 1000px */
+            margin: 30px auto;      /* Centralizado com margens */
             background: white;
-            padding: 30px;          /* Aumenta o espaçamento interno */
+            padding: 30px;          /* Espaçamento interno maior */
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
         }
-
         .btn {
             display: inline-block;
             padding: 10px 15px;
@@ -67,41 +116,49 @@ if (isset($_SESSION['sucesso'])) {
             border-radius: 5px;
             transition: 0.3s;
         }
-
         .btn:hover {
             background-color: #0056b3;
         }
-
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
             text-align: center;
         }
-
         th, td {
             border: 1px solid #ddd;
             padding: 12px;
             text-align: center;
         }
-
         th {
             background-color: #f4f4f4;
             font-size: 16px;
         }
-
         td {
             font-size: 15px;
         }
-
         .acoes {
             display: flex;
             justify-content: center;
             gap: 10px;
         }
-
         .acoes a {
             padding: 8px 12px;
+        }
+        /* Estilos simples para o formulário de edição */
+        .form-group {
+            margin: 10px 0;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            padding: 8px;
+            width: 95%;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
     </style>
 </head>
@@ -118,6 +175,34 @@ if (isset($_SESSION['sucesso'])) {
 
         <?php if ($sucesso): ?>
             <div class="alert alert-success"><?= htmlspecialchars($sucesso) ?></div>
+        <?php endif; ?>
+
+        <!-- Se houver solicitação de edição, exibe o formulário -->
+        <?php if ($editSale): ?>
+            <h2>Editar Venda</h2>
+            <form method="POST" action="relatorio.php">
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="id" value="<?= htmlspecialchars($editSale['id']) ?>">
+                <div class="form-group">
+                    <label for="cliente">Cliente:</label>
+                    <input type="text" name="cliente" id="cliente" value="<?= htmlspecialchars($editSale['cliente']) ?>" required>
+                </div>
+                <div class="form-group">
+                    <label for="valor">Valor:</label>
+                    <input type="text" name="valor" id="valor" value="<?= htmlspecialchars($editSale['valor']) ?>" required>
+                </div>
+                <div class="form-group">
+                    <label for="forma_pagamento">Pagamento:</label>
+                    <input type="text" name="forma_pagamento" id="forma_pagamento" value="<?= htmlspecialchars($editSale['forma_pagamento']) ?>" required>
+                </div>
+                <div class="form-group">
+                    <label for="motoboy">Motoboy:</label>
+                    <input type="text" name="motoboy" id="motoboy" value="<?= htmlspecialchars($editSale['motoboy']) ?>">
+                </div>
+                <button type="submit" class="btn">Atualizar</button>
+                <a href="relatorio.php" class="btn">Cancelar</a>
+            </form>
+            <hr>
         <?php endif; ?>
 
         <table>
