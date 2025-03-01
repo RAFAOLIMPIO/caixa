@@ -48,9 +48,9 @@ if (isset($_SESSION['sucesso'])) {
 
         /* Container ampliado */
         .container {
-            width: 90%;             /* Aumenta a largura para 90% da tela */
+            width: 95%;             /* Aumenta a largura para 95% da tela */
             max-width: 1000px;      /* Define uma largura máxima de 1000px para telas grandes */
-            margin: 20px auto;      /* Centraliza horizontalmente com margem de 20px */
+            margin: 20px auto;      /* Centraliza horizontalmente com margem de 25px */
             background: white;
             padding: 30px;          /* Aumenta o espaçamento interno */
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
