@@ -37,6 +37,7 @@ body {
     min-height: 450px;
     max-height: 650px;
     overflow-y: auto;
+    position: relative;
 }
 
 h1.title-login {
@@ -102,7 +103,7 @@ label {
     box-shadow: 0 5px 15px rgba(255, 75, 43, 0.3);
 }
 
-/* Botões de Ação Atualizados */
+/* Botões de Ação */
 .button {
   width: 50px;
   height: 50px;
@@ -175,6 +176,30 @@ label {
   transform: translateY(60%);
 }
 
+/* Modal Edição */
+.modal-edicao {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--background-light);
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    z-index: 1000;
+    width: 90%;
+    max-width: 500px;
+}
+
+.modal-edicao h2 {
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+}
+
+.modal-edicao .form-group {
+    margin-bottom: 1rem;
+}
+
 @media (max-width: 768px) {
     .container {
         max-width: 90%;
@@ -186,5 +211,9 @@ label {
 
     body {
         padding: 1rem;
+    }
+
+    .modal-edicao {
+        padding: 1.5rem;
     }
 }
