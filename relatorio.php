@@ -25,8 +25,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
     exit();
 }
 
-// Processar atualização se o formulário de edição for submetido
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update') {
+// Processar atualização se o formulário for submetido
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'update') {
     $id = (int)$_POST['id'];
     $cliente = $_POST['cliente'] ?? '';
     $valor = $_POST['valor'] ?? '';
@@ -43,21 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit();
 }
 
-// Se for solicitado editar, buscar os dados da venda para preencher o formulário
-$editSale = null;
-if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) {
-    $id = (int)$_GET['id'];
-    $stmt = $pdo->prepare("SELECT * FROM vendas WHERE id = ? AND loja_id = ?");
-    $stmt->execute([$id, $loja_id]);
-    $editSale = $stmt->fetch();
-    if (!$editSale) {
-        $_SESSION['erro'] = "Venda não encontrada.";
-        header("Location: relatorio.php");
-        exit();
-    }
-}
-
-// Buscar as vendas para exibição na tabela
+// Buscar vendas
 $vendas = [];
 try {
     $stmt_vendas = $pdo->prepare("SELECT 
@@ -65,7 +51,7 @@ try {
         DATE_FORMAT(v.criado_em, '%d/%m/%Y %H:%i') as data_formatada,
         COALESCE(f.nome, 'Não informado') as autozoner_nome
         FROM vendas v
-        LEFT JOIN funcionarios f ON v.autozoner_id = f.id AND f.tipo = 'autozoner'
+        LEFT JOIN funcionarios f ON v.autozoner_id = f.id
         WHERE v.loja_id = ?
         ORDER BY v.criado_em DESC");
     $stmt_vendas->execute([$loja_id]);
@@ -74,15 +60,6 @@ try {
     die("Erro ao buscar dados: " . $e->getMessage());
 }
 
-if (isset($_SESSION['erro'])) {
-    $erros[] = $_SESSION['erro'];
-    unset($_SESSION['erro']);
-}
-
-if (isset($_SESSION['sucesso'])) {
-    $sucesso = $_SESSION['sucesso'];
-    unset($_SESSION['sucesso']);
-}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -91,119 +68,27 @@ if (isset($_SESSION['sucesso'])) {
     <title>Relatório de Vendas</title>
     <link rel="stylesheet" type="text/css" href="css/style.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
-            text-align: center;
-        }
-        /* Container ampliado */
-        .container {
-            width: 100%;             /* Ocupa 90% da largura da tela */
-            max-width: 1000px;      /* Largura máxima de 1000px */
-            margin: 30px auto;      /* Centralizado com margens */
-            background: white;
-            padding: 30px;          /* Espaçamento interno maior */
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-        }
-        .btn {
-            display: inline-block;
-            padding: 10px 15px;
-            margin: 10px 5px;
-            text-decoration: none;
-            color: white;
-            background-color: #007bff;
-            border-radius: 5px;
-            transition: 0.3s;
-        }
-        .btn:hover {
-            background-color: #0056b3;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            text-align: center;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: center;
-        }
-        th {
-            background-color: #f4f4f4;
-            font-size: 16px;
-        }
-        td {
-            font-size: 15px;
-        }
-        .acoes {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-        .acoes a {
-            padding: 8px 12px;
-        }
-        /* Estilos simples para o formulário de edição */
-        .form-group {
-            margin: 10px 0;
-            text-align: left;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        .form-group input {
-            padding: 8px;
-            width: 95%;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
+        body { font-family: Arial, sans-serif; background-color: #f8f9fa; text-align: center; }
+        .container { width: 100%; max-width: 1000px; margin: 30px auto; background: white; padding: 30px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; text-align: center; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #f4f4f4; font-size: 16px; }
+        .acoes { display: flex; justify-content: center; gap: 10px; }
+        .button { width: 50px; height: 50px; border-radius: 50%; background-color: rgb(20, 20, 20); border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px rgba(0, 0, 0, 0.164); cursor: pointer; transition: .3s; position: relative; }
+        .button:hover { width: 140px; border-radius: 50px; align-items: center; }
+        .button::before { position: absolute; top: -20px; color: white; font-size: 2px; transition: .3s; }
+        .button:hover::before { font-size: 13px; opacity: 1; transform: translateY(30px); }
+        .button-delete { background-color: rgb(255, 69, 69); }
+        .button-delete::before { content: "Excluir"; }
+        .button-edit { background-color: rgb(69, 130, 255); }
+        .button-edit::before { content: "Editar"; }
+        .svgIcon { width: 12px; transition-duration: .3s; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Relatório de Vendas</h1>
         <a href="menu.php" class="btn">&larr; Voltar</a>
-
-        <?php if (!empty($erros)): ?>
-            <div class="alert alert-error">
-                <?= implode('<br>', array_map('htmlspecialchars', $erros)) ?>
-            </div>
-        <?php endif; ?>
-
-        <?php if ($sucesso): ?>
-            <div class="alert alert-success"><?= htmlspecialchars($sucesso) ?></div>
-        <?php endif; ?>
-
-        <!-- Se houver solicitação de edição, exibe o formulário -->
-        <?php if ($editSale): ?>
-            <h2>Editar Venda</h2>
-            <form method="POST" action="relatorio.php">
-                <input type="hidden" name="action" value="update">
-                <input type="hidden" name="id" value="<?= htmlspecialchars($editSale['id']) ?>">
-                <div class="form-group">
-                    <label for="cliente">Cliente:</label>
-                    <input type="text" name="cliente" id="cliente" value="<?= htmlspecialchars($editSale['cliente']) ?>" required>
-                </div>
-                <div class="form-group">
-                    <label for="valor">Valor:</label>
-                    <input type="text" name="valor" id="valor" value="<?= htmlspecialchars($editSale['valor']) ?>" required>
-                </div>
-                <div class="form-group">
-                    <label for="forma_pagamento">Pagamento:</label>
-                    <input type="text" name="forma_pagamento" id="forma_pagamento" value="<?= htmlspecialchars($editSale['forma_pagamento']) ?>" required>
-                </div>
-                <div class="form-group">
-                    <label for="motoboy">Motoboy:</label>
-                    <input type="text" name="motoboy" id="motoboy" value="<?= htmlspecialchars($editSale['motoboy']) ?>">
-                </div>
-                <button type="submit" class="btn">Atualizar</button>
-                <a href="relatorio.php" class="btn">Cancelar</a>
-            </form>
-            <hr>
-        <?php endif; ?>
 
         <table>
             <thead>
@@ -214,7 +99,6 @@ if (isset($_SESSION['sucesso'])) {
                     <th>Pagamento</th>
                     <th>Autozoner</th>
                     <th>Motoboy</th>
-                    <th>Status</th>
                     <th>Ações</th>
                 </tr>
             </thead>
@@ -228,52 +112,23 @@ if (isset($_SESSION['sucesso'])) {
                         <td><?= ucfirst($v['forma_pagamento']) ?></td>
                         <td><?= htmlspecialchars($v['autozoner_nome']) ?></td>
                         <td><?= htmlspecialchars($v['motoboy'] ?? 'Não informado') ?></td>
-                        <td>
-                            <input 
-                                type="checkbox" 
-                                class="status-pago" 
-                                data-venda-id="<?= $v['id'] ?>" 
-                                <?= $v['pago'] ? 'checked' : '' ?>
-                            >
-                            <span class="status-text"><?= $v['pago'] ? 'Pago' : 'Pendente' ?></span>
-                        </td>
                         <td class="acoes">
-                            <a href="relatorio.php?action=edit&id=<?= $v['id'] ?>" class="btn editar">Editar</a>
-                            <a href="relatorio.php?action=delete&id=<?= $v['id'] ?>" 
-                               class="btn excluir" 
-                               onclick="return confirm('Tem certeza que deseja excluir?')">Excluir</a>
+                            <a href="relatorio.php?action=edit&id=<?= $v['id'] ?>" class="button button-edit">
+                                <svg class="svgIcon" viewBox="0 0 448 512">
+                                    <path d="M362.7 19.3C375.9 6 394.1 0 412.3 0S448.7 6 461.9 19.3c26 26 26 68.2 0 94.2L168.3 407.1c-2.8 2.8-6.3 4.8-10.1 5.7l-99.8 23.2c-5.9 1.4-12-0.4-16.3-4.7s-6.1-10.3-4.7-16.3l23.2-99.8c.9-3.8 2.9-7.3 5.7-10.1L362.7 19.3z"></path>
+                                </svg>
+                            </a>
+                            <a href="relatorio.php?action=delete&id=<?= $v['id'] ?>" class="button button-delete" onclick="return confirm('Tem certeza que deseja excluir?')">
+                                <svg class="svgIcon" viewBox="0 0 448 512">
+                                    <path d="M432 32H312l-9.4-18.7A24 24 0 0 0 280 0H168a24 24 0 0 0-22.6 13.3L136 32H16A16 16 0 0 0 0 48V80a16 16 0 0 0 16 16h16v336c0 26.5 21.5 48 48 48h288c26.5 0 48-21.5 48-48V96h16a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16z"></path>
+                                </svg>
+                            </a>
                         </td>
                     </tr>
                     <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="8" class="sem-dados">Nenhuma venda registrada ainda</td>
-                    </tr>
                 <?php endif; ?>
             </tbody>
         </table>
     </div>
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-    $(document).ready(function() {
-        $('.status-pago').change(function() {
-            const vendaId = $(this).data('venda-id');
-            const isPago = $(this).is(':checked');
-            
-            $.ajax({
-                url: 'atualizar_status.php',
-                method: 'POST',
-                data: {
-                    id: vendaId,
-                    pago: isPago ? 1 : 0
-                },
-                success: function(response) {
-                    $(this).next('.status-text').text(isPago ? 'Pago' : 'Pendente');
-                }.bind(this)
-            });
-        });
-    });
-    </script>
 </body>
 </html>
