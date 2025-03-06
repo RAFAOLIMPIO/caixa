@@ -4,13 +4,93 @@ include 'includes/config.php';
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+// Verificar autenticação
 if (!isset($_SESSION['usuario'])) {
     header("Location: login.php");
     exit();
 }
 
-// ... (mantenha o código PHP original sem alterações) ...
+$loja_id = (int)$_SESSION['usuario']['id'];
+$erros = [];
+$sucesso = '';
 
+// =============================================
+// 1. PROCESSAR NOVA VENDA
+// =============================================
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $cliente = htmlspecialchars(trim($_POST['cliente'] ?? ''));
+    $forma_pagamento = in_array($_POST['forma_pagamento'] ?? '', ['cartao', 'pix', 'dinheiro']) 
+                        ? $_POST['forma_pagamento'] 
+                        : '';
+    $valor = (float)str_replace(',', '.', $_POST['valor'] ?? 0);
+    $valor_recebido = (float)str_replace(',', '.', $_POST['valor_recebido'] ?? 0);
+    $motoboy = htmlspecialchars(trim($_POST['motoboy'] ?? ''));
+    $autozoner_id = (int)($_POST['autozoner_id'] ?? 0);
+
+    // Validações
+    if (empty($cliente)) $erros[] = "Nome do cliente é obrigatório!";
+    if (empty($forma_pagamento)) $erros[] = "Selecione a forma de pagamento!";
+    if ($valor <= 0) $erros[] = "Valor deve ser maior que zero!";
+    
+    if ($forma_pagamento === 'dinheiro' && $valor_recebido < $valor) {
+        $erros[] = "Valor recebido insuficiente!";
+    }
+
+    if (empty($erros)) {
+        try {
+            $troco = ($forma_pagamento === 'dinheiro') ? ($valor_recebido - $valor) : 0;
+
+            $stmt = $pdo->prepare("INSERT INTO vendas 
+                (cliente, forma_pagamento, valor, valor_recebido, troco, motoboy, autozoner_id, loja_id) 
+                VALUES (:cliente, :forma, :valor, :recebido, :troco, :motoboy, :autozoner, :loja)");
+            
+            $stmt->execute([
+                ':cliente' => $cliente,
+                ':forma' => $forma_pagamento,
+                ':valor' => $valor,
+                ':recebido' => ($forma_pagamento === 'dinheiro') ? $valor_recebido : null,
+                ':troco' => $troco,
+                ':motoboy' => $motoboy,
+                ':autozoner' => $autozoner_id,
+                ':loja' => $loja_id
+            ]);
+
+            $sucesso = "Venda registrada com sucesso!";
+
+        } catch (PDOException $e) {
+            $erros[] = "Erro ao registrar venda: " . $e->getMessage();
+        }
+    }
+}
+
+// =============================================
+// 2. BUSCAR DADOS PARA O FORMULÁRIO
+// =============================================
+try {
+    // Lista de Autozoners
+    $stmt_autozoners = $pdo->prepare("SELECT id, nome FROM funcionarios 
+                                    WHERE loja_id = ? AND tipo = 'autozoner'");
+    $stmt_autozoners->execute([$loja_id]);
+    $autozoners = $stmt_autozoners->fetchAll();
+
+    // Lista de Motoboys
+    $stmt_motoboys = $pdo->prepare("SELECT nome FROM funcionarios 
+                                  WHERE loja_id = ? AND tipo = 'motoboy'");
+    $stmt_motoboys->execute([$loja_id]);
+    $motoboys = $stmt_motoboys->fetchAll(PDO::FETCH_COLUMN);
+
+    // Últimas vendas
+    $stmt_vendas = $pdo->prepare("SELECT *, DATE_FORMAT(criado_em, '%d/%m/%Y %H:%i') as data_formatada 
+                                FROM vendas 
+                                WHERE loja_id = ? 
+                                ORDER BY criado_em DESC 
+                                LIMIT 10");
+    $stmt_vendas->execute([$loja_id]);
+    $vendas = $stmt_vendas->fetchAll();
+
+} catch (PDOException $e) {
+    die("Erro ao buscar dados: " . $e->getMessage());
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -18,7 +98,7 @@ if (!isset($_SESSION['usuario'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle de Caixa</title>
-    <link rel="stylesheet" href="css/estilo.css">
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -175,7 +255,7 @@ if (!isset($_SESSION['usuario'])) {
     </div>
 
     <script>
-        // Mantenha o JavaScript original com ajuste nos seletores
+        // Controle dinâmico do campo de dinheiro
         const formaPagamento = document.getElementById('formaPagamento');
         const dinheiroSection = document.getElementById('dinheiroSection');
 
@@ -189,6 +269,7 @@ if (!isset($_SESSION['usuario'])) {
             }
         });
 
+        // Cálculo automático do troco
         document.querySelector('[name="valor_recebido"]')?.addEventListener('input', function() {
             const valor = parseFloat(document.querySelector('[name="valor"]').value) || 0;
             const recebido = parseFloat(this.value) || 0;
