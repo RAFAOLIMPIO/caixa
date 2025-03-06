@@ -4,7 +4,105 @@ include 'includes/config.php';
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// ... (Todo o código PHP original mantido sem alterações) ...
+// =============================================
+// 1. VERIFICAÇÃO DE AUTENTICAÇÃO
+// =============================================
+if (!isset($_SESSION['usuario']['id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+// =============================================
+// 2. VALIDAÇÃO DO ID DA LOJA
+// =============================================
+$loja_id = (int)$_SESSION['usuario']['id'];
+
+// Verificar existência da loja no banco
+try {
+    $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE id = ?");
+    $stmt->execute([$loja_id]);
+    if ($stmt->rowCount() === 0) {
+        session_destroy();
+        die("Erro crítico: Loja não encontrada! Faça login novamente.");
+    }
+} catch (PDOException $e) {
+    die("Erro de conexão: " . $e->getMessage());
+}
+
+// =============================================
+// 3. LÓGICA PRINCIPAL
+// =============================================
+$erros = [];
+$sucesso = '';
+
+// Processar formulário POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $nome = htmlspecialchars(trim($_POST['nome'] ?? ''));
+    $tipo = in_array($_POST['tipo'] ?? '', ['autozoner', 'motoboy']) ? $_POST['tipo'] : '';
+    $funcionario_id = isset($_POST['funcionario_id']) ? (int)$_POST['funcionario_id'] : null;
+
+    // Validações
+    if (strlen($nome) < 3) $erros[] = "Nome deve ter pelo menos 3 caracteres";
+    if (empty($tipo)) $erros[] = "Selecione um tipo válido";
+
+    if (empty($erros)) {
+        try {
+            if ($funcionario_id) {
+                // Atualização
+                $stmt = $pdo->prepare("UPDATE funcionarios SET nome = ?, tipo = ? WHERE id = ? AND loja_id = ?");
+                $stmt->execute([$nome, $tipo, $funcionario_id, $loja_id]);
+                $sucesso = "Funcionário atualizado!";
+            } else {
+                // Inserção
+                $stmt = $pdo->prepare("INSERT INTO funcionarios (nome, tipo, loja_id) VALUES (?, ?, ?)");
+                $stmt->execute([$nome, $tipo, $loja_id]);
+                $sucesso = "Funcionário cadastrado!";
+            }
+        } catch (PDOException $e) {
+            error_log("Erro DB: " . $e->getMessage());
+            $erros[] = "Operação falhou. Tente novamente.";
+        }
+    }
+}
+
+// =============================================
+// 4. PROCESSAR EXCLUSÃO
+// =============================================
+if (isset($_GET['excluir'])) {
+    $id_excluir = (int)$_GET['excluir'];
+    try {
+        $stmt = $pdo->prepare("DELETE FROM funcionarios WHERE id = ? AND loja_id = ?");
+        $stmt->execute([$id_excluir, $loja_id]);
+        $sucesso = $stmt->rowCount() > 0 ? "Excluído com sucesso!" : "Registro não encontrado";
+    } catch (PDOException $e) {
+        $erros[] = "Erro ao excluir: " . $e->getMessage();
+    }
+}
+
+// =============================================
+// 5. BUSCAR DADOS
+// =============================================
+try {
+    // Dados para edição
+    $editar = [];
+    if (isset($_GET['editar'])) {
+        $stmt = $pdo->prepare("SELECT * FROM funcionarios WHERE id = ? AND loja_id = ?");
+        $stmt->execute([(int)$_GET['editar'], $loja_id]);
+        $editar = $stmt->fetch() ?: [];
+    }
+
+    // Listagem
+    $stmt_autozoners = $pdo->prepare("SELECT * FROM funcionarios WHERE loja_id = ? AND tipo = 'autozoner' ORDER BY nome");
+    $stmt_autozoners->execute([$loja_id]);
+    $autozoners = $stmt_autozoners->fetchAll();
+
+    $stmt_motoboys = $pdo->prepare("SELECT * FROM funcionarios WHERE loja_id = ? AND tipo = 'motoboy' ORDER BY nome");
+    $stmt_motoboys->execute([$loja_id]);
+    $motoboys = $stmt_motoboys->fetchAll();
+
+} catch (PDOException $e) {
+    die("Erro de carregamento: " . $e->getMessage());
+}
 
 ?>
 <!DOCTYPE html>
