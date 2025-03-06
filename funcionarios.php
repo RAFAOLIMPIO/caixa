@@ -17,7 +17,6 @@ if (!isset($_SESSION['usuario']['id'])) {
 // =============================================
 $loja_id = (int)$_SESSION['usuario']['id'];
 
-// Verificar existência da loja no banco
 try {
     $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE id = ?");
     $stmt->execute([$loja_id]);
@@ -35,25 +34,21 @@ try {
 $erros = [];
 $sucesso = '';
 
-// Processar formulário POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = htmlspecialchars(trim($_POST['nome'] ?? ''));
     $tipo = in_array($_POST['tipo'] ?? '', ['autozoner', 'motoboy']) ? $_POST['tipo'] : '';
     $funcionario_id = isset($_POST['funcionario_id']) ? (int)$_POST['funcionario_id'] : null;
 
-    // Validações
     if (strlen($nome) < 3) $erros[] = "Nome deve ter pelo menos 3 caracteres";
     if (empty($tipo)) $erros[] = "Selecione um tipo válido";
 
     if (empty($erros)) {
         try {
             if ($funcionario_id) {
-                // Atualização
                 $stmt = $pdo->prepare("UPDATE funcionarios SET nome = ?, tipo = ? WHERE id = ? AND loja_id = ?");
                 $stmt->execute([$nome, $tipo, $funcionario_id, $loja_id]);
                 $sucesso = "Funcionário atualizado!";
             } else {
-                // Inserção
                 $stmt = $pdo->prepare("INSERT INTO funcionarios (nome, tipo, loja_id) VALUES (?, ?, ?)");
                 $stmt->execute([$nome, $tipo, $loja_id]);
                 $sucesso = "Funcionário cadastrado!";
@@ -83,7 +78,6 @@ if (isset($_GET['excluir'])) {
 // 5. BUSCAR DADOS
 // =============================================
 try {
-    // Dados para edição
     $editar = [];
     if (isset($_GET['editar'])) {
         $stmt = $pdo->prepare("SELECT * FROM funcionarios WHERE id = ? AND loja_id = ?");
@@ -91,7 +85,6 @@ try {
         $editar = $stmt->fetch() ?: [];
     }
 
-    // Listagem
     $stmt_autozoners = $pdo->prepare("SELECT * FROM funcionarios WHERE loja_id = ? AND tipo = 'autozoner' ORDER BY nome");
     $stmt_autozoners->execute([$loja_id]);
     $autozoners = $stmt_autozoners->fetchAll();
@@ -103,7 +96,6 @@ try {
 } catch (PDOException $e) {
     die("Erro de carregamento: " . $e->getMessage());
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -129,7 +121,6 @@ try {
                     </a>
                 </div>
 
-                <!-- Alertas -->
                 <?php if (!empty($erros)): ?>
                     <div class="alert alert-error">
                         <i class="fas fa-exclamation-triangle"></i>
@@ -137,14 +128,13 @@ try {
                     </div>
                 <?php endif; ?>
 
-                <?php if ($sucesso)): ?>
+                <?php if ($sucesso): ?>
                     <div class="alert alert-success">
                         <i class="fas fa-check-circle"></i>
                         <?= htmlspecialchars($sucesso) ?>
                     </div>
                 <?php endif; ?>
 
-                <!-- Formulário -->
                 <section class="card form-section">
                     <h2 class="section-title">
                         <i class="fas fa-<?= empty($editar) ? 'plus' : 'edit' ?>"></i>
@@ -193,9 +183,7 @@ try {
                     </form>
                 </section>
 
-                <!-- Listagem -->
                 <div class="grid-col-2">
-                    <!-- Autozoners -->
                     <section class="card">
                         <div class="section-header">
                             <h2 class="section-title">
@@ -218,7 +206,7 @@ try {
                                             </a>
                                             <a href="?excluir=<?= $funcionario['id'] ?>" 
                                                class="btn btn-danger hover-scale"
-                                               onclick="return confirm('Tem certeza que deseja excluir este funcionário?')">
+                                               onclick="return confirm('Tem certeza que deseja excluir?')">
                                                 <i class="fas fa-trash"></i>
                                             </a>
                                         </div>
@@ -233,7 +221,6 @@ try {
                         <?php endif; ?>
                     </section>
 
-                    <!-- Motoboys -->
                     <section class="card">
                         <div class="section-header">
                             <h2 class="section-title">
@@ -256,7 +243,7 @@ try {
                                             </a>
                                             <a href="?excluir=<?= $funcionario['id'] ?>" 
                                                class="btn btn-danger hover-scale"
-                                               onclick="return confirm('Tem certeza que deseja excluir este funcionário?')">
+                                               onclick="return confirm('Tem certeza que deseja excluir?')">
                                                 <i class="fas fa-trash"></i>
                                             </a>
                                         </div>
