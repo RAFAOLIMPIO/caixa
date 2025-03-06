@@ -1,7 +1,6 @@
 <?php
 include 'includes/config.php';
 
-// Redireciona usuário logado
 if(isset($_SESSION['usuario'])) {
     header("Location: menu.php");
     exit();
@@ -9,50 +8,15 @@ if(isset($_SESSION['usuario'])) {
 
 $erro = '';
 
-// Processa o formulário
-if($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $numero_loja = sanitizar($_POST['numero_loja']);
-    $senha = sanitizar($_POST['senha']);
+// ... (mantenha o código PHP de processamento do formulário igual) ...
 
-    try {  
-        $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE numero_loja = ?");  
-        $stmt->execute([$numero_loja]);  
-        $usuario = $stmt->fetch();  
-
-        if($usuario && password_verify($senha, $usuario['senha'])) {  
-            // Cria sessão
-            $_SESSION['usuario'] = [  
-                'id' => $usuario['id'],  
-                'numero_loja' => $usuario['numero_loja'],  
-                'email' => $usuario['email']  
-            ];  
-            
-            // Lembrar conta
-            if(isset($_POST['lembrar'])) {  
-                $token = bin2hex(random_bytes(32));  
-                setcookie('lembrar_token', $token, time() + (86400 * 30), "/");  
-                $stmt = $pdo->prepare("UPDATE usuarios SET lembrar_token = ? WHERE id = ?");  
-                $stmt->execute([$token, $usuario['id']]);  
-            }  
-            
-            header("Location: menu.php");  
-            exit();  
-            
-        } else {  
-            $erro = "Credenciais inválidas!";  
-        }  
-        
-    } catch(PDOException $e) {  
-        $erro = "Erro no sistema: " . $e->getMessage();  
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acesso ao Sistema</title>
+    <title>Login</title>
     <link rel="stylesheet" href="css/estilo.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -60,16 +24,12 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="auth-container">
         <div class="auth-card">
             <div class="brand-header">
-                <svg class="brand-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M7 10L11 12.5L17 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <h1 class="brand-title">Gestão Comercial</h1>
+                <h1 class="brand-title">Login</h1>
             </div>
 
             <?php if($erro): ?>
-                <div class="alert alert-error pulse">
-                    <i class="fas fa-exclamation-triangle"></i>
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
                     <?= htmlspecialchars($erro) ?>
                 </div>
             <?php endif; ?>
@@ -108,17 +68,15 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 <div class="form-group remember-container">
                     <label class="remember-label">
-                        <input type="checkbox" 
-                               name="lembrar" 
-                               class="hidden-checkbox">
+                        <input type="checkbox" name="lembrar" class="hidden-checkbox">
                         <span class="custom-checkbox"></span>
-                        Manter conectado
+                        Lembrar minha conta
                     </label>
                 </div>
 
-                <button type="submit" class="btn btn-primary hover-scale">
+                <button type="submit" class="btn btn-primary">
                     <i class="fas fa-sign-in-alt"></i>
-                    Acessar Sistema
+                    Entrar
                 </button>
 
                 <div class="auth-links">
