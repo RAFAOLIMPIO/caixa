@@ -8,8 +8,40 @@ if(isset($_SESSION['usuario'])) {
 
 $erro = '';
 
-// ... (mantenha o código PHP de processamento do formulário igual) ...
+if($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $numero_loja = sanitizar($_POST['numero_loja']);
+    $senha = sanitizar($_POST['senha']);
 
+    try {  
+        $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE numero_loja = ?");  
+        $stmt->execute([$numero_loja]);  
+        $usuario = $stmt->fetch();  
+
+        if($usuario && password_verify($senha, $usuario['senha'])) {  
+            $_SESSION['usuario'] = [  
+                'id' => $usuario['id'],  
+                'numero_loja' => $usuario['numero_loja'],  
+                'email' => $usuario['email']  
+            ];  
+            
+            if(isset($_POST['lembrar'])) {  
+                $token = bin2hex(random_bytes(32));  
+                setcookie('lembrar_token', $token, time() + (86400 * 30), "/");  
+                $stmt = $pdo->prepare("UPDATE usuarios SET lembrar_token = ? WHERE id = ?");  
+                $stmt->execute([$token, $usuario['id']]);  
+            }  
+            
+            header("Location: menu.php");  
+            exit();  
+            
+        } else {  
+            $erro = "Credenciais inválidas!";  
+        }  
+        
+    } catch(PDOException $e) {  
+        $erro = "Erro no sistema: " . $e->getMessage();  
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -17,7 +49,7 @@ $erro = '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/estilo.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -68,7 +100,9 @@ $erro = '';
 
                 <div class="form-group remember-container">
                     <label class="remember-label">
-                        <input type="checkbox" name="lembrar" class="hidden-checkbox">
+                        <input type="checkbox" 
+                               name="lembrar" 
+                               class="hidden-checkbox">
                         <span class="custom-checkbox"></span>
                         Lembrar minha conta
                     </label>
