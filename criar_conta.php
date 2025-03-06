@@ -4,13 +4,19 @@ ini_set('display_errors', 1);
 
 include 'includes/config.php';
 
+// Redirecionar se já estiver logado
 if(isset($_SESSION['usuario'])) {
     header("Location: menu.php");
     exit();
 }
 
-// ... (mantenha o código PHP original sem alterações) ...
+$erros = [];
+$sucesso = '';
 
+// Processar formulário
+if($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // ... (mantenha todo o código PHP original sem alterações) ...
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -23,19 +29,19 @@ if(isset($_SESSION['usuario'])) {
 </head>
 <body>
     <div class="auth-container">
-        <div class="auth-card">
+        <div class="auth-card pulse">
             <div class="brand-header">
                 <h1 class="brand-title">
-                    <i class="fas fa-user-plus"></i>
-                    Criar Nova Conta
+                    <i class="fas fa-user-shield"></i>
+                    Cadastro de Nova Conta
                 </h1>
             </div>
 
             <?php if(!empty($erros)): ?>
-                <div class="alert alert-error pulse">
+                <div class="alert alert-error">
                     <i class="fas fa-exclamation-triangle"></i>
                     <?php foreach($erros as $erro): ?>
-                        <p><?= htmlspecialchars($erro) ?></p>
+                        <div><?= htmlspecialchars($erro) ?></div>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
@@ -50,12 +56,12 @@ if(isset($_SESSION['usuario'])) {
             <form method="POST" class="auth-form">
                 <div class="form-group">
                     <label class="input-label">
-                        <i class="fas fa-store"></i>
+                        <i class="fas fa-hashtag"></i>
                         Número da Loja
                     </label>
                     <input type="text" 
                            name="numero_loja" 
-                           class="form-input" 
+                           class="form-input"
                            required
                            value="<?= htmlspecialchars($_POST['numero_loja'] ?? '') ?>">
                 </div>
@@ -67,7 +73,7 @@ if(isset($_SESSION['usuario'])) {
                     </label>
                     <input type="email" 
                            name="email" 
-                           class="form-input" 
+                           class="form-input"
                            required
                            value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
                 </div>
@@ -79,7 +85,7 @@ if(isset($_SESSION['usuario'])) {
                     </label>
                     <input type="password" 
                            name="senha" 
-                           class="form-input" 
+                           class="form-input"
                            required>
                 </div>
 
@@ -90,13 +96,13 @@ if(isset($_SESSION['usuario'])) {
                     </label>
                     <input type="password" 
                            name="confirmar_senha" 
-                           class="form-input" 
+                           class="form-input"
                            required>
                 </div>
 
                 <div class="form-group">
                     <label class="input-label">
-                        <i class="fas fa-shield-alt"></i>
+                        <i class="fas fa-question-circle"></i>
                         Pergunta de Segurança
                     </label>
                     <div class="select-wrapper">
@@ -113,11 +119,11 @@ if(isset($_SESSION['usuario'])) {
                 <div class="form-group">
                     <label class="input-label">
                         <i class="fas fa-key"></i>
-                        Resposta
+                        Resposta de Segurança
                     </label>
                     <input type="text" 
                            name="resposta" 
-                           class="form-input" 
+                           class="form-input"
                            required
                            value="<?= htmlspecialchars($_POST['resposta'] ?? '') ?>">
                 </div>
@@ -129,8 +135,8 @@ if(isset($_SESSION['usuario'])) {
 
                 <div class="auth-links">
                     <a href="index.php" class="link-icon">
-                        <i class="fas fa-arrow-left"></i>
-                        Já tem conta? Faça login
+                        <i class="fas fa-sign-in-alt"></i>
+                        Voltar para Login
                     </a>
                 </div>
             </form>
