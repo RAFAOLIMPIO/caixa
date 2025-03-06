@@ -25,7 +25,6 @@ body {
     overflow-y: auto;
 }
 
-/* Container principal */
 .container {
     max-width: 700px;
     width: 90%;
@@ -40,7 +39,6 @@ body {
     overflow-y: auto;
 }
 
-/* Título */
 h1.title-login {
     background: var(--primary-gradient);
     -webkit-background-clip: text;
@@ -50,7 +48,6 @@ h1.title-login {
     margin-bottom: 1.5rem;
 }
 
-/* Formulários */
 .form-group {
     margin-bottom: 1.8rem;
     position: relative;
@@ -81,7 +78,6 @@ label {
     color: #555;
 }
 
-/* Botões principais */
 .btn {
     padding: 12px 25px;
     border: none;
@@ -106,69 +102,79 @@ label {
     box-shadow: 0 5px 15px rgba(255, 75, 43, 0.3);
 }
 
-/* Botões do Relatório */
-.acoes {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-}
-
+/* Botões de Ação Atualizados */
 .button {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-color: rgb(20, 20, 20);
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.164);
-    cursor: pointer;
-    transition: 0.3s;
-    position: relative;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: rgb(20, 20, 20);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.164);
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
 }
 
-.button:hover {
-    width: 140px;
-    border-radius: 50px;
+.button .svgIcon {
+  width: 12px;
+  transition: var(--transition);
+  fill: white;
 }
 
-.button::before {
-    position: absolute;
-    top: -20px;
-    color: white;
-    font-size: 2px;
-    transition: 0.3s;
-}
-
-.button:hover::before {
-    font-size: 13px;
-    opacity: 1;
-    transform: translateY(30px);
-}
-
-.button-delete {
-    background-color: rgb(255, 69, 69);
+.button-delete:hover {
+  width: 140px;
+  border-radius: 50px;
+  background-color: #ff4545;
 }
 
 .button-delete::before {
-    content: "Excluir";
+  content: "Excluir";
+  position: absolute;
+  top: -20px;
+  color: white;
+  font-size: 2px;
+  transition: var(--transition);
 }
 
-.button-edit {
-    background-color: rgb(69, 130, 255);
+.button-delete:hover::before {
+  font-size: 13px;
+  opacity: 1;
+  transform: translateY(30px);
+}
+
+.button-delete:hover .svgIcon {
+  transform: translateY(60%);
+}
+
+.button-edit:hover {
+  width: 140px;
+  border-radius: 50px;
+  background-color: #3b82f6;
 }
 
 .button-edit::before {
-    content: "Editar";
+  content: "Editar";
+  position: absolute;
+  top: -20px;
+  color: white;
+  font-size: 2px;
+  transition: var(--transition);
 }
 
-.svgIcon {
-    width: 12px;
-    transition-duration: 0.3s;
+.button-edit:hover::before {
+  font-size: 13px;
+  opacity: 1;
+  transform: translateY(30px);
 }
 
-/* Ajuste para telas menores */
+.button-edit:hover .svgIcon {
+  transform: translateY(60%);
+}
+
 @media (max-width: 768px) {
     .container {
         max-width: 90%;
