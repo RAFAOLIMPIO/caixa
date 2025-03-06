@@ -265,3 +265,71 @@ body {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+/* Componentes específicos do caixa */
+.flex-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.grid-col-2 {
+    display: grid;
+    gap: 2rem;
+}
+
+.vendas-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.venda-item {
+    background: var(--background);
+    padding: 1rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
+.venda-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.venda-date {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.badge-cartao { background: #dbeafe; color: #1e40af; }
+.badge-pix { background: #cffafe; color: #0e7490; }
+.badge-dinheiro { background: #dcfce7; color: #166534; }
+
+.venda-valor {
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 1.1rem;
+}
+
+.venda-details {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+@media (min-width: 768px) {
+    .grid-col-2 {
+        grid-template-columns: 2fr 1fr;
+    }
+}
