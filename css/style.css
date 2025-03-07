@@ -17,7 +17,8 @@
     --space-sm: 1rem;
     --space-md: 1.5rem;
     --space-lg: 2rem;
-    
+    --space-menu: 1mm; /* Distância entre botões no menu */
+
     /* Tipografia */
     --text-base: 1rem;
     --text-lg: 1.125rem;
@@ -60,8 +61,12 @@ body {
     position: sticky;
     top: 0;
     height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-menu);
 }
 
+/* Área de Conteúdo */
 .content-area {
     padding: var(--space-lg);
 }
@@ -74,9 +79,18 @@ body {
     font-weight: 500;
     cursor: pointer;
     transition: var(--transition);
-    display: inline-flex;
+    display: flex;
     align-items: center;
+    justify-content: center;
     gap: var(--space-xs);
+    width: 100%;
+    box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
+    transform: scale(1);
+}
+
+.btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
 }
 
 .btn-primary {
@@ -86,7 +100,6 @@ body {
 
 .btn-primary:hover {
     background: var(--primary-hover);
-    transform: translateY(-1px);
 }
 
 .btn-secondary {
@@ -101,6 +114,13 @@ body {
 
 .btn-danger:hover {
     background: var(--danger-hover);
+}
+
+/* Organização dos botões no menu */
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-menu);
 }
 
 /* Inputs */
@@ -225,7 +245,7 @@ body {
     }
 }
 
-/* Animações */
+/* Animação Pulsante */
 .pulse {
     animation: pulse 1.5s infinite;
 }
