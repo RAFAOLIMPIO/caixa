@@ -1,3 +1,11 @@
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Variáveis de estilo */
 :root {
     /* Cores */
     --primary: #2563eb;
@@ -12,59 +20,46 @@
     --text-muted: #64748b;
     --border: #e2e8f0;
     
-    /* Espaçamentos */
+    /* Espaçamentos e demais */
     --space-xs: 0.5rem;
     --space-sm: 1rem;
     --space-md: 1.5rem;
     --space-lg: 2rem;
-    --space-menu: 3mm; /* Distância exata entre os botões do menu */
-
-    /* Tipografia */
-    --text-base: 1rem;
-    --text-lg: 1.125rem;
-    --text-xl: 1.25rem;
-    --text-2xl: 1.5rem;
-    
-    /* Efeitos */
-    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --space-menu: 1mm; /* Espaçamento exato para menus */
     --radius-sm: 0.5rem;
     --radius-md: 1rem;
     --transition: all 0.3s ease-in-out;
 }
 
-/* Base */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Inter', sans-serif;
-}
-
+/* Estilos base para o body */
 body {
     background: var(--background);
     color: var(--text);
-    line-height: 1.5;
+    font-family: 'Inter', sans-serif;
     min-height: 100vh;
+}
+
+/* Layout principal centralizado */
+.main-wrapper {
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: var(--space-lg);
 }
 
-/* Container Padrão */
+/* Container padrão centralizado */
 .container {
     width: 90%;
-    max-width: 800px; /* Ajusta o tamanho no desktop */
+    max-width: 800px;
     background: var(--surface);
     padding: var(--space-lg);
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    position: relative;
     text-align: center;
 }
 
-/* Botão Voltar */
+/* Botão Voltar pequeno, azul, no canto superior esquerdo */
 .btn-back {
     position: absolute;
     top: 10px;
@@ -83,15 +78,177 @@ body {
     background: var(--primary-hover);
 }
 
-/* Ajuste do layout */
-.main-container {
-    display: flex;
-    justify-content: center;
+/* Botões Gerais */
+.btn {
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
     align-items: center;
+    gap: var(--space-xs);
     width: 100%;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* Responsividade */
+.btn:active {
+    transform: scale(0.95);
+}
+
+.btn:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Tipos de botão */
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+.btn-secondary {
+    background: var(--secondary);
+    color: white;
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: var(--danger-hover);
+}
+
+/* Organização dos botões no menu (caso seja necessário) */
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-menu);
+}
+
+/* Inputs */
+.form-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Tabelas */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.table th,
+.table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.table th {
+    background: var(--background);
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+/* Navegação */
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: 0.75rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.nav-link:hover,
+.nav-link.active {
+    background: var(--background);
+    color: var(--primary);
+    font-weight: 500;
+}
+
+/* Alertas */
+.alert {
+    padding: 1rem;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+}
+
+.alert-success {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+}
+
+.alert-info {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    place-items: center;
+    z-index: 1000;
+}
+
+.modal-overlay.active {
+    display: grid;
+}
+
+.modal-content {
+    background: var(--surface);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    width: 90%;
+    max-width: 500px;
+}
+
+/* Animação pulsante */
+.pulse {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Responsividade para mobile */
 @media (max-width: 768px) {
     .container {
         width: 95%;
