@@ -1,5 +1,4 @@
-
-/* estilo.css - Versão 3.0 (Sistema Completo Organizado) */
+/* estilo.css - Versão 3.1 (Sistema Completo Centralizado e Padronizado) */
 :root {
     /* ========== CORES ========== */
     --primary: #2563eb;
@@ -55,32 +54,43 @@ body {
     color: var(--text);
     line-height: 1.5;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 /* ========== LAYOUT PRINCIPAL ========== */
 .main-container {
-    display: grid;
-    grid-template-columns: var(--sidebar-width) 1fr;
-    min-height: 100vh;
-    max-width: var(--max-width);
-    margin: 0 auto;
-}
-
-.sidebar {
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    padding: var(--space-md);
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow-y: auto;
-}
-
-.content-area {
-    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     width: 100%;
-    max-width: calc(var(--max-width) - var(--sidebar-width));
-    margin: 0 auto;
+    max-width: var(--max-width);
+    min-height: 100vh;
+    padding: var(--space-lg);
+}
+
+/* Sidebar Centralizada */
+.sidebar {
+    width: 100%;
+    max-width: var(--sidebar-width);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: var(--space-md);
+    text-align: center;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow);
+    margin-bottom: var(--space-md);
+}
+
+/* Área de Conteúdo Centralizada */
+.content-area {
+    width: 100%;
+    max-width: var(--max-width);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 /* ========== COMPONENTES REUTILIZÁVEIS ========== */
@@ -92,9 +102,11 @@ body {
     font-weight: 500;
     cursor: pointer;
     transition: var(--transition);
-    display: inline-flex;
+    display: flex;
+    justify-content: center;
     align-items: center;
     gap: var(--space-xs);
+    width: 100%;
 }
 
 .btn-primary {
@@ -122,6 +134,7 @@ body {
     border: 1px solid var(--border);
     text-decoration: none;
     padding: var(--space-xs) var(--space-md);
+    text-align: center;
 }
 
 .btn-voltar:hover {
@@ -138,6 +151,7 @@ body {
     padding: var(--space-md);
     box-shadow: var(--shadow);
     margin-bottom: var(--space-md);
+    text-align: center;
 }
 
 /* Formulários */
@@ -147,6 +161,7 @@ body {
     border: 2px solid var(--border);
     border-radius: var(--radius-sm);
     transition: var(--transition);
+    text-align: center;
 }
 
 .form-input:focus {
@@ -155,12 +170,11 @@ body {
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-/* Tabelas */
+/* Tabelas Centralizadas */
 .table-responsive {
-    overflow-x: auto;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border);
-    margin: var(--space-md) 0;
+    display: flex;
+    justify-content: center;
+    width: 100%;
 }
 
 .table {
@@ -168,12 +182,12 @@ body {
     border-collapse: collapse;
     background: var(--surface);
     min-width: 800px;
+    text-align: center;
 }
 
 .table th,
 .table td {
     padding: var(--space-sm);
-    text-align: left;
     border-bottom: 1px solid var(--border);
 }
 
@@ -186,6 +200,7 @@ body {
 .menu-container {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: var(--space-xs);
     background: var(--surface);
     border-radius: var(--radius-md);
@@ -202,6 +217,7 @@ body {
     text-decoration: none;
     border-radius: var(--radius-sm);
     transition: var(--transition);
+    justify-content: center;
 }
 
 .menu-item:hover {
@@ -209,26 +225,10 @@ body {
     color: var(--primary);
 }
 
-/* ========== HEADER ========== */
-.flex-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-lg);
-    gap: var(--space-md);
-}
-
 /* ========== RESPONSIVIDADE ========== */
 @media (max-width: 1024px) {
     .main-container {
-        grid-template-columns: 1fr;
-    }
-
-    .sidebar {
-        position: static;
-        height: auto;
-        border-right: none;
-        border-bottom: 1px solid var(--border);
+        width: 100%;
     }
 
     .content-area {
@@ -240,12 +240,6 @@ body {
 @media (max-width: 768px) {
     .btn {
         width: 100%;
-        justify-content: center;
-    }
-
-    .flex-header {
-        flex-direction: column;
-        align-items: stretch;
     }
 
     .table {
@@ -275,8 +269,9 @@ body {
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
-    display: grid;
-    place-items: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     z-index: 1000;
 }
 
@@ -286,18 +281,6 @@ body {
     border-radius: var(--radius-md);
     width: 90%;
     max-width: 500px;
-    animation: modalEntrance 0.3s ease-out;
-}
-
-@keyframes modalEntrance {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 /* Estados Vazios */
@@ -308,11 +291,4 @@ body {
     border: 2px dashed var(--border);
     border-radius: var(--radius-md);
     margin: var(--space-md) 0;
-}
-
-/* Grid Responsivo */
-.grid-col-2 {
-    display: grid;
-    gap: var(--space-lg);
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
