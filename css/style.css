@@ -1,4 +1,4 @@
-/* estilo.css - Versão 3.3 (Login Container e Menu Botões Alinhados) */
+/* estilo.css - Versão 3.4 (Login Centralizado e Menu Organizado) */
 :root {
     /* ========== CORES ========== */
     --primary: #2563eb;
@@ -110,28 +110,30 @@ html, body {
 .menu-container {
     display: flex;
     flex-direction: column;
-    align-items: stretch; /* Faz com que os botões ocupem toda a largura */
-    gap: var(--space-sm); /* Espaçamento entre os botões */
+    align-items: center;
+    gap: var(--space-md);  /* Espaçamento maior entre os botões */
     background: var(--surface);
     border-radius: var(--radius-md);
-    padding: var(--space-sm);
+    padding: var(--space-md);
     box-shadow: var(--shadow);
 }
 
 .menu-item {
     display: block;
-    width: 100%;
-    padding: var(--space-xs) var(--space-sm);
+    width: 90%;  /* Botões não ocupam 100% para dar margem */
+    padding: var(--space-sm);
     color: var(--text-muted);
     text-decoration: none;
     border-radius: var(--radius-sm);
     transition: var(--transition);
     text-align: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
 }
 
 .menu-item:hover {
-    background: var(--background);
-    color: var(--primary);
+    background: var(--primary);
+    color: white;
 }
 
 /* ========== RESPONSIVIDADE ========== */
