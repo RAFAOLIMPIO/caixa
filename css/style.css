@@ -1,4 +1,4 @@
-/* estilo.css - Versão 3.5 (Menu Organizado e Login Centralizado) */
+/* ========== VARIÁVEIS CSS ========== */
 :root {
     /* ========== CORES ========== */
     --primary: #2563eb;
@@ -46,19 +46,23 @@ body {
     line-height: 1.5;
 }
 
-/* ========== CONTAINER CENTRALIZADO (Tela de Login) ========== */
+/* ========== CONTAINER CENTRALIZADO (Login e Menu) ========== */
 .container {
     width: 100%;
-    max-width: 400px;
+    max-width: 300px;
     margin: 2rem auto;
+    padding: var(--space-md);
     background: var(--surface);
-    padding: var(--space-lg);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
     text-align: center;
 }
 
-/* ========== FORMULÁRIOS E INPUTS UNIFORMES ========== */
+/* ========== FORMULÁRIOS E INPUTS ========== */
 .form-group {
     display: flex;
     flex-direction: column;
@@ -82,7 +86,12 @@ body {
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-/* ========== BOTÕES DO LOGIN ========== */
+/* Ajuste no espaçamento dos inputs de login */
+.login-container .form-input {
+    margin-bottom: var(--space-sm);
+}
+
+/* ========== BOTÕES ========== */
 .btn {
     width: 100%;
     padding: var(--space-sm);
@@ -100,7 +109,7 @@ body {
     transform: translateY(-1px);
 }
 
-/* ========== MENU LATERAL (menu.php) ========== */
+/* ========== MENU LATERAL ========== */
 .menu-container {
     width: 300px;
     margin: 2rem auto;
@@ -111,14 +120,13 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-md); /* Espaçamento entre os botões */
+    gap: var(--space-sm); /* Reduzi o espaçamento entre botões */
 }
 
 .menu-item {
     display: block;
-    width: 90%; /* Ocupa a maior parte da largura do container */
+    width: 100%; /* Largura total do container */
     padding: var(--space-sm);
-    margin-bottom: var(--space-md);
     background: var(--surface);
     color: var(--text-muted);
     text-decoration: none;
@@ -126,16 +134,12 @@ body {
     border-radius: var(--radius-sm);
     text-align: center;
     transition: var(--transition);
+    margin-bottom: 0; /* Removi margem inferior */
 }
 
 .menu-item:hover {
     background: var(--primary);
     color: #fff;
-}
-
-/* Remove margem inferior no último item */
-.menu-item:last-child {
-    margin-bottom: 0;
 }
 
 /* ========== RESPONSIVIDADE ========== */
