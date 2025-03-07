@@ -17,7 +17,7 @@
     --space-sm: 1rem;
     --space-md: 1.5rem;
     --space-lg: 2rem;
-    --space-menu: 1mm; /* Distância exata entre os botões do menu */
+    --space-menu: 3mm; /* Distância exata entre os botões do menu */
 
     /* Tipografia */
     --text-base: 1rem;
@@ -45,220 +45,56 @@ body {
     color: var(--text);
     line-height: 1.5;
     min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-/* Layout Principal */
-.main-container {
-    display: grid;
-    grid-template-columns: 240px 1fr;
-    min-height: 100vh;
-}
-
-.sidebar {
+/* Container Padrão */
+.container {
+    width: 90%;
+    max-width: 800px; /* Ajusta o tamanho no desktop */
     background: var(--surface);
-    border-right: 1px solid var(--border);
-    padding: var(--space-md);
-    position: sticky;
-    top: 0;
-    height: 100vh;
+    padding: var(--space-lg);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
-    gap: var(--space-menu); /* Mantém 1mm de espaço entre os botões */
-}
-
-/* Área de Conteúdo */
-.content-area {
-    padding: var(--space-lg);
-}
-
-/* Botões */
-.btn {
-    padding: 0.75rem 1.25rem;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-    display: flex;
     align-items: center;
-    justify-content: center;
-    gap: var(--space-xs);
-    width: 100%;
-    box-shadow: var(--shadow);
+    text-align: center;
 }
 
-/* Efeito de "pressionamento" ao clicar */
-.btn:active {
-    transform: scale(0.95);
-}
-
-/* Animação sutil ao passar o mouse */
-.btn:hover {
-    filter: brightness(1.1);
-    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
-}
-
-.btn-primary {
+/* Botão Voltar */
+.btn-back {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
     background: var(--primary);
     color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
 }
 
-.btn-primary:hover {
+.btn-back:hover {
     background: var(--primary-hover);
 }
 
-.btn-secondary {
-    background: var(--secondary);
-    color: white;
-}
-
-.btn-danger {
-    background: var(--danger);
-    color: white;
-}
-
-.btn-danger:hover {
-    background: var(--danger-hover);
-}
-
-/* Organização dos botões no menu */
-.menu-buttons {
+/* Ajuste do layout */
+.main-container {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-menu); /* 1mm entre os botões */
-}
-
-/* Inputs */
-.form-input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 2px solid var(--border);
-    border-radius: var(--radius-sm);
-    transition: var(--transition);
-}
-
-/* Removendo efeito de "respiração" na tela de criar conta */
-.form-input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    animation: none; /* Desativa qualquer animação */
-}
-
-/* Tabelas */
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--surface);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-}
-
-.table th,
-.table td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-}
-
-.table th {
-    background: var(--background);
-    font-weight: 600;
-    color: var(--text);
-    white-space: nowrap;
-}
-
-/* Navegação */
-.nav-link {
-    display: flex;
+    justify-content: center;
     align-items: center;
-    gap: var(--space-xs);
-    padding: 0.75rem;
-    color: var(--text-muted);
-    text-decoration: none;
-    border-radius: var(--radius-sm);
-    transition: var(--transition);
-}
-
-.nav-link:hover,
-.nav-link.active {
-    background: var(--background);
-    color: var(--primary);
-    font-weight: 500;
-}
-
-/* Alertas */
-.alert {
-    padding: 1rem;
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    margin-bottom: var(--space-md);
-}
-
-.alert-success {
-    background: #dcfce7;
-    color: #166534;
-    border: 1px solid #86efac;
-}
-
-.alert-info {
-    background: #dbeafe;
-    color: #1e40af;
-    border: 1px solid #93c5fd;
-}
-
-/* Modal */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: none;
-    place-items: center;
-    z-index: 1000;
-}
-
-.modal-overlay.active {
-    display: grid;
-}
-
-.modal-content {
-    background: var(--surface);
-    padding: var(--space-md);
-    border-radius: var(--radius-md);
-    width: 90%;
-    max-width: 500px;
+    width: 100%;
 }
 
 /* Responsividade */
 @media (max-width: 768px) {
-    .main-container {
-        grid-template-columns: 1fr;
-    }
-    
-    .sidebar {
-        height: auto;
-        position: relative;
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-    }
-    
-    .content-area {
+    .container {
+        width: 95%;
         padding: var(--space-md);
     }
-}
-
-/* Animação Pulsante (usada em alertas ou status) */
-.pulse {
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
 }
