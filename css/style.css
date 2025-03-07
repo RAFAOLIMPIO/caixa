@@ -1,5 +1,4 @@
-
-/* estilo.css - Versão 3.2 (Centralização Completa e Inputs Uniformes) */
+/* estilo.css - Versão 3.3 (Login Container e Menu Botões Alinhados) */
 :root {
     /* ========== CORES ========== */
     --primary: #2563eb;
@@ -51,7 +50,7 @@ html, body {
     align-items: center;
 }
 
-/* ========== CONTAINER CENTRALIZADO ========== */
+/* ========== CONTAINER CENTRALIZADO (Tela de Login) ========== */
 .container {
     width: 100%;
     max-width: 400px;
@@ -107,72 +106,37 @@ html, body {
     transform: translateY(-1px);
 }
 
+/* ========== MENU LATERAL ========== */
+.menu-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch; /* Faz com que os botões ocupem toda a largura */
+    gap: var(--space-sm); /* Espaçamento entre os botões */
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+    box-shadow: var(--shadow);
+}
+
+.menu-item {
+    display: block;
+    width: 100%;
+    padding: var(--space-xs) var(--space-sm);
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    text-align: center;
+}
+
+.menu-item:hover {
+    background: var(--background);
+    color: var(--primary);
+}
+
 /* ========== RESPONSIVIDADE ========== */
 @media (max-width: 480px) {
     .container {
         max-width: 90%;
     }
-}
-
-
-    .content-area {
-        max-width: 100%;
-        padding: var(--space-md);
-    }
-}
-
-@media (max-width: 768px) {
-    .btn {
-        width: 100%;
-    }
-
-    .table {
-        min-width: 100%;
-    }
-}
-
-/* ========== COMPONENTES ESPECÍFICOS ========== */
-/* Badges */
-.badge {
-    padding: var(--space-xs) var(--space-sm);
-    border-radius: var(--radius-sm);
-    font-size: 0.875rem;
-    font-weight: 500;
-    display: inline-block;
-}
-
-.badge-primary { background: var(--primary); color: white; }
-.badge-success { background: var(--success); color: white; }
-.badge-danger { background: var(--danger); color: white; }
-
-/* Modal */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    background: var(--surface);
-    padding: var(--space-lg);
-    border-radius: var(--radius-md);
-    width: 90%;
-    max-width: 500px;
-}
-
-/* Estados Vazios */
-.empty-state {
-    text-align: center;
-    padding: var(--space-lg);
-    color: var(--text-muted);
-    border: 2px dashed var(--border);
-    border-radius: var(--radius-md);
-    margin: var(--space-md) 0;
 }
