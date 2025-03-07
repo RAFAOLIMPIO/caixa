@@ -110,6 +110,7 @@ body {
 }
 
 /* ========== MENU LATERAL ========== */
+/* ========== MENU LATERAL ========== */
 .menu-container {
     width: 300px;
     margin: 2rem auto;
@@ -119,13 +120,11 @@ body {
     box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: var(--space-sm); /* Reduzi o espaçamento entre botões */
 }
 
 .menu-item {
     display: block;
-    width: 100%; /* Largura total do container */
+    width: 100%;
     padding: var(--space-sm);
     background: var(--surface);
     color: var(--text-muted);
@@ -134,9 +133,14 @@ body {
     border-radius: var(--radius-sm);
     text-align: center;
     transition: var(--transition);
-    margin-bottom: 0; /* Removi margem inferior */
+    /* Espaçamento entre botões */
+    margin-bottom: 1mm; /* Espaço de 1mm abaixo de cada botão */
 }
 
+/* Remove a margem do último item */
+.menu-item:last-child {
+    margin-bottom: 0;
+}
 .menu-item:hover {
     background: var(--primary);
     color: #fff;
