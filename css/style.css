@@ -1,38 +1,37 @@
-/* ========== VARIÁVEIS CSS ========== */
 :root {
-    /* ========== CORES ========== */
+    /* Cores */
     --primary: #2563eb;
     --primary-hover: #1d4ed8;
     --secondary: #4b5563;
     --success: #16a34a;
     --danger: #dc2626;
+    --danger-hover: #b91c1c;
     --background: #f8fafc;
     --surface: #ffffff;
     --text: #1e293b;
     --text-muted: #64748b;
     --border: #e2e8f0;
-
-    /* ========== ESPAÇAMENTOS ========== */
+    
+    /* Espaçamentos */
     --space-xs: 0.5rem;
     --space-sm: 1rem;
     --space-md: 1.5rem;
     --space-lg: 2rem;
-
-    /* ========== TIPOGRAFIA ========== */
+    
+    /* Tipografia */
     --text-base: 1rem;
     --text-lg: 1.125rem;
     --text-xl: 1.25rem;
     --text-2xl: 1.5rem;
-
-    /* ========== EFEITOS ========== */
+    
+    /* Efeitos */
     --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     --radius-sm: 0.5rem;
     --radius-md: 1rem;
-    --radius-lg: 1.5rem;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition: all 0.3s ease-in-out;
 }
 
-/* ========== BASE ========== */
+/* Base */
 * {
     margin: 0;
     padding: 0;
@@ -44,40 +43,73 @@ body {
     background: var(--background);
     color: var(--text);
     line-height: 1.5;
+    min-height: 100vh;
 }
 
-/* ========== CONTAINER CENTRALIZADO (Login e Menu) ========== */
-.container {
-    width: 100%;
-    max-width: 300px;
-    margin: 2rem auto;
-    padding: var(--space-md);
+/* Layout Principal */
+.main-container {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 100vh;
+}
+
+.sidebar {
     background: var(--surface);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow);
-    display: flex;
-    flex-direction: column;
+    border-right: 1px solid var(--border);
+    padding: var(--space-md);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+}
+
+.content-area {
+    padding: var(--space-lg);
+}
+
+/* Botões */
+.btn {
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
     align-items: center;
-    gap: var(--space-md);
-    text-align: center;
+    gap: var(--space-xs);
 }
 
-/* ========== FORMULÁRIOS E INPUTS ========== */
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
-    margin-bottom: var(--space-md);
+.btn-primary {
+    background: var(--primary);
+    color: white;
 }
 
+.btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: var(--secondary);
+    color: white;
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: var(--danger-hover);
+}
+
+/* Inputs */
 .form-input {
     width: 100%;
-    padding: var(--space-sm);
+    padding: 0.75rem;
     border: 2px solid var(--border);
     border-radius: var(--radius-sm);
     transition: var(--transition);
-    text-align: center;
-    font-size: var(--text-base);
 }
 
 .form-input:focus {
@@ -86,69 +118,120 @@ body {
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-/* Ajuste no espaçamento dos inputs de login */
-.login-container .form-input {
-    margin-bottom: var(--space-sm);
-}
-
-/* ========== BOTÕES ========== */
-.btn {
+/* Tabelas */
+.table {
     width: 100%;
-    padding: var(--space-sm);
-    background: var(--primary);
-    color: #fff;
-    border: none;
+    border-collapse: collapse;
+    background: var(--surface);
     border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: var(--transition);
-    margin-bottom: var(--space-sm);
+    overflow: hidden;
 }
 
-.btn:hover {
-    background: var(--primary-hover);
-    transform: translateY(-1px);
+.table th,
+.table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
 }
 
-/* ========== MENU LATERAL ========== */
-/* ========== MENU LATERAL ========== */
-.menu-container {
-    width: 300px;
-    margin: 2rem auto;
-    padding: var(--space-md);
-    background: var(--surface);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow);
+.table th {
+    background: var(--background);
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+/* Navegação */
+.nav-link {
     display: flex;
-    flex-direction: column;
-}
-
-.menu-item {
-    display: block;
-    width: 100%;
-    padding: var(--space-sm);
-    background: var(--surface);
+    align-items: center;
+    gap: var(--space-xs);
+    padding: 0.75rem;
     color: var(--text-muted);
     text-decoration: none;
-    border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    text-align: center;
     transition: var(--transition);
-    /* Espaçamento entre botões */
-    margin-bottom: 1mm; /* Espaço de 1mm abaixo de cada botão */
 }
 
-/* Remove a margem do último item */
-.menu-item:last-child {
-    margin-bottom: 0;
-}
-.menu-item:hover {
-    background: var(--primary);
-    color: #fff;
+.nav-link:hover,
+.nav-link.active {
+    background: var(--background);
+    color: var(--primary);
+    font-weight: 500;
 }
 
-/* ========== RESPONSIVIDADE ========== */
-@media (max-width: 480px) {
-    .container, .menu-container {
-        max-width: 90%;
+/* Alertas */
+.alert {
+    padding: 1rem;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+}
+
+.alert-success {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+}
+
+.alert-info {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    place-items: center;
+    z-index: 1000;
+}
+
+.modal-overlay.active {
+    display: grid;
+}
+
+.modal-content {
+    background: var(--surface);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    width: 90%;
+    max-width: 500px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .main-container {
+        grid-template-columns: 1fr;
     }
+    
+    .sidebar {
+        height: auto;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .content-area {
+        padding: var(--space-md);
+    }
+}
+
+/* Animações */
+.pulse {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
 }
