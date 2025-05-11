@@ -1,16 +1,16 @@
 <?php
 session_start();
 
-// Conexão com o banco (AWS RDS)
-$host = 'sistema-caixa.cpqiw2qka4z1.sa-east-1.rds.amazonaws.com'; // Endpoint do RDS
-$user = 'admin'; // Nome de usuário do RDS
-$password = 'Melancia09'; // Senha do RDS
-$database = 'sistema_loja'; // Nome do banco de dados
+// Conexão com o banco (Railway)
+$host = 'mysql.railway.interno'; // MYSQLHOST
+$user = 'raiz';                   // USUÁRIO MYSQL
+$password = 'eLCxrwCATavhCwyXQSoSNIWlINzTHXTk'; // SENHA MYSQL
+$database = 'ferrovia';          // BANCO DE DADOS MYSQL
 
 try {
     $pdo = new PDO(
-        "mysql:host=$host;dbname=$database;charset=utf8mb4", 
-        $user, 
+        "mysql:host=$host;port=3306;dbname=$database;charset=utf8mb4",
+        $user,
         $password
     );
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
