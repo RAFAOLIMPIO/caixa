@@ -11,11 +11,14 @@ RUN apt-get update && apt-get install -y \
     zip \
     && a2enmod rewrite
 
-# Habilita o mod_rewrite do Apache (para URLs amigáveis)
-RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
+# Copia os arquivos do projeto para o diretório padrão do Apache
+COPY . /var/www/html/
+
+# Corrige permissões
+RUN chown -R www-data:www-data /var/www/html
 
 # Define o diretório de trabalho
 WORKDIR /var/www/html
 
-# Expõe a porta 80
+# Expondo a porta 80
 EXPOSE 80
