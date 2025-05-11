@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 include 'includes/config.php';
 
 // Redirecionar se já estiver logado
-if(isset($_SESSION['usuario'])) {
+if (isset($_SESSION['usuario'])) {
     header("Location: menu.php");
     exit();
 }
@@ -13,9 +13,43 @@ if(isset($_SESSION['usuario'])) {
 $erros = [];
 $sucesso = '';
 
-// Processar formulário
-if($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // ... (mantenha todo o código PHP original sem alterações) ...
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $numero_loja = sanitizar($_POST['numero_loja']);
+    $email = sanitizar($_POST['email']);
+    $senha = $_POST['senha'];
+    $confirmar = $_POST['confirmar_senha'];
+    $pergunta = sanitizar($_POST['pergunta']);
+    $resposta = sanitizar($_POST['resposta']);
+
+    // Validações
+    if (strlen($senha) < 8) {
+        $erros[] = "A senha deve ter pelo menos 8 caracteres.";
+    }
+
+    if ($senha !== $confirmar) {
+        $erros[] = "As senhas não coincidem.";
+    }
+
+    // Verifica se e-mail já está cadastrado
+    $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE email = ?");
+    $stmt->execute([$email]);
+    if ($stmt->fetch()) {
+        $erros[] = "Este e-mail já está cadastrado.";
+    }
+
+    if (empty($erros)) {
+        $hash = password_hash($senha, PASSWORD_DEFAULT);
+
+        $stmt = $pdo->prepare("INSERT INTO usuarios (numero_loja, email, senha, pergunta_seguranca, resposta_seguranca) VALUES (?, ?, ?, ?, ?)");
+        $executado = $stmt->execute([$numero_loja, $email, $hash, $pergunta, $resposta]);
+
+        if ($executado) {
+            $sucesso = "Conta criada com sucesso! Você já pode fazer login.";
+            $_POST = []; // Limpa os dados do formulário
+        } else {
+            $erros[] = "Erro ao criar conta. Tente novamente.";
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -28,119 +62,104 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-card pulse">
-            <div class="brand-header">
-                <h1 class="brand-title">
-                    <i class="fas fa-user-shield"></i>
-                    Cadastro de Nova Conta
-                </h1>
+<div class="auth-container">
+    <div class="auth-card pulse">
+        <div class="brand-header">
+            <h1 class="brand-title">
+                <i class="fas fa-user-shield"></i>
+                Cadastro de Nova Conta
+            </h1>
+        </div>
+
+        <?php if (!empty($erros)): ?>
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <?php foreach ($erros as $erro): ?>
+                    <div><?= htmlspecialchars($erro) ?></div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($sucesso): ?>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <?= htmlspecialchars($sucesso) ?>
+            </div>
+        <?php endif; ?>
+
+        <form method="POST" class="auth-form">
+            <div class="form-group">
+                <label class="input-label">
+                    <i class="fas fa-hashtag"></i>
+                    Número da Loja
+                </label>
+                <input type="text" name="numero_loja" class="form-input" required
+                       value="<?= htmlspecialchars($_POST['numero_loja'] ?? '') ?>">
             </div>
 
-            <?php if(!empty($erros)): ?>
-                <div class="alert alert-error">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <?php foreach($erros as $erro): ?>
-                        <div><?= htmlspecialchars($erro) ?></div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
+            <div class="form-group">
+                <label class="input-label">
+                    <i class="fas fa-envelope"></i>
+                    E-mail
+                </label>
+                <input type="email" name="email" class="form-input" required
+                       value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+            </div>
 
-            <?php if($sucesso): ?>
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i>
-                    <?= htmlspecialchars($sucesso) ?>
-                </div>
-            <?php endif; ?>
+            <div class="form-group">
+                <label class="input-label">
+                    <i class="fas fa-lock"></i>
+                    Senha (mínimo 8 caracteres)
+                </label>
+                <input type="password" name="senha" class="form-input" required>
+            </div>
 
-            <form method="POST" class="auth-form">
-                <div class="form-group">
-                    <label class="input-label">
-                        <i class="fas fa-hashtag"></i>
-                        Número da Loja
-                    </label>
-                    <input type="text" 
-                           name="numero_loja" 
-                           class="form-input"
-                           required
-                           value="<?= htmlspecialchars($_POST['numero_loja'] ?? '') ?>">
-                </div>
+            <div class="form-group">
+                <label class="input-label">
+                    <i class="fas fa-lock"></i>
+                    Confirmar Senha
+                </label>
+                <input type="password" name="confirmar_senha" class="form-input" required>
+            </div>
 
-                <div class="form-group">
-                    <label class="input-label">
-                        <i class="fas fa-envelope"></i>
-                        E-mail
-                    </label>
-                    <input type="email" 
-                           name="email" 
-                           class="form-input"
-                           required
-                           value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+            <div class="form-group">
+                <label class="input-label">
+                    <i class="fas fa-question-circle"></i>
+                    Pergunta de Segurança
+                </label>
+                <div class="select-wrapper">
+                    <select name="pergunta" class="form-input" required>
+                        <option value="">Selecione uma pergunta</option>
+                        <option value="Nome do seu primeiro pet?" <?= isset($_POST['pergunta']) && $_POST['pergunta'] == 'Nome do seu primeiro pet?' ? 'selected' : '' ?>>Nome do seu primeiro pet?</option>
+                        <option value="Nome da sua mãe solteira?" <?= isset($_POST['pergunta']) && $_POST['pergunta'] == 'Nome da sua mãe solteira?' ? 'selected' : '' ?>>Nome da sua mãe solteira?</option>
+                        <option value="Cidade onde nasceu?" <?= isset($_POST['pergunta']) && $_POST['pergunta'] == 'Cidade onde nasceu?' ? 'selected' : '' ?>>Cidade onde nasceu?</option>
+                    </select>
+                    <i class="fas fa-chevron-down select-arrow"></i>
                 </div>
+            </div>
 
-                <div class="form-group">
-                    <label class="input-label">
-                        <i class="fas fa-lock"></i>
-                        Senha (mínimo 8 caracteres)
-                    </label>
-                    <input type="password" 
-                           name="senha" 
-                           class="form-input"
-                           required>
-                </div>
+            <div class="form-group">
+                <label class="input-label">
+                    <i class="fas fa-key"></i>
+                    Resposta de Segurança
+                </label>
+                <input type="text" name="resposta" class="form-input" required
+                       value="<?= htmlspecialchars($_POST['resposta'] ?? '') ?>">
+            </div>
 
-                <div class="form-group">
-                    <label class="input-label">
-                        <i class="fas fa-lock"></i>
-                        Confirmar Senha
-                    </label>
-                    <input type="password" 
-                           name="confirmar_senha" 
-                           class="form-input"
-                           required>
-                </div>
+            <button type="submit" class="btn btn-primary hover-scale">
+                <i class="fas fa-user-plus"></i>
+                Criar Conta
+            </button>
 
-                <div class="form-group">
-                    <label class="input-label">
-                        <i class="fas fa-question-circle"></i>
-                        Pergunta de Segurança
-                    </label>
-                    <div class="select-wrapper">
-                        <select name="pergunta" class="form-input" required>
-                            <option value="">Selecione uma pergunta</option>
-                            <option value="Nome do seu primeiro pet?" <?= isset($_POST['pergunta']) && $_POST['pergunta'] == 'Nome do seu primeiro pet?' ? 'selected' : '' ?>>Nome do seu primeiro pet?</option>
-                            <option value="Nome da sua mãe solteira?" <?= isset($_POST['pergunta']) && $_POST['pergunta'] == 'Nome da sua mãe solteira?' ? 'selected' : '' ?>>Nome da sua mãe solteira?</option>
-                            <option value="Cidade onde nasceu?" <?= isset($_POST['pergunta']) && $_POST['pergunta'] == 'Cidade onde nasceu?' ? 'selected' : '' ?>>Cidade onde nasceu?</option>
-                        </select>
-                        <i class="fas fa-chevron-down select-arrow"></i>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="input-label">
-                        <i class="fas fa-key"></i>
-                        Resposta de Segurança
-                    </label>
-                    <input type="text" 
-                           name="resposta" 
-                           class="form-input"
-                           required
-                           value="<?= htmlspecialchars($_POST['resposta'] ?? '') ?>">
-                </div>
-
-                <button type="submit" class="btn btn-primary hover-scale">
-                    <i class="fas fa-user-plus"></i>
-                    Criar Conta
-                </button>
-
-                <div class="auth-links">
-                    <a href="index.php" class="link-icon">
-                        <i class="fas fa-sign-in-alt"></i>
-                        Voltar para Login
-                    </a>
-                </div>
-            </form>
-        </div>
+            <div class="auth-links">
+                <a href="index.php" class="link-icon">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Voltar para Login
+                </a>
+            </div>
+        </form>
     </div>
+</div>
 </body>
 </html>
