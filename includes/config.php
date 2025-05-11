@@ -1,15 +1,16 @@
 <?php
 session_start();
 
-// Conexão com o banco (Railway)
-$host = 'mysql.railway.interno'; // MYSQLHOST
-$user = 'raiz';                   // USUÁRIO MYSQL
-$password = 'eLCxrwCATavhCwyXQSoSNIWlINzTHXTk'; // SENHA MYSQL
-$database = 'ferrovia';          // BANCO DE DADOS MYSQL
+// Conexão com o banco (Railway externo)
+$host = 'yamanote.proxy.rlwy.net';
+$port = 57420;
+$user = 'root';
+$password = 'OlLAHAxVBKtEbKdpcpuryBKFcOlwtvhy';
+$database = 'railway';
 
 try {
     $pdo = new PDO(
-        "mysql:host=$host;port=3306;dbname=$database;charset=utf8mb4",
+        "mysql:host=$host;port=$port;dbname=$database;charset=utf8mb4",
         $user,
         $password
     );
@@ -19,7 +20,6 @@ try {
     die("Erro de conexão: " . $e->getMessage());
 }
 
-// Função de segurança
 function sanitizar($dado) {
     return htmlspecialchars(trim($dado), ENT_QUOTES, 'UTF-8');
 }
