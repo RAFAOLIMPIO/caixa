@@ -5,7 +5,7 @@ session_start();
 $host = 'yamanoote.proxy.rlwy.net'; // Pegue o domínio visível na variável MYSQL_PUBLIC_URL
 $port = 57420; // Pegue da mesma variável
 $user = 'root'; // MYSQLUSER
-$password = 'OllAHAxVbKtEbKdpcpuryBKFcOltvwhy'; // MYSQLPASSWORD
+$password = 'OlLAHAxVBKtEbKdpcpuryBKFcOlwtvhy'; // MYSQLPASSWORD
 $database = 'railway'; // MYSQLDATABASE
 
 try {
