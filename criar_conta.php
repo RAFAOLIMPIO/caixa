@@ -4,7 +4,6 @@ ini_set('display_errors', 1);
 
 include 'includes/config.php';
 
-// Redirecionar se já estiver logado
 if(isset($_SESSION['usuario'])) {
     header("Location: menu.php");
     exit();
@@ -13,11 +12,39 @@ if(isset($_SESSION['usuario'])) {
 $erros = [];
 $sucesso = '';
 
-// Processar formulário
 if($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // ... (mantenha todo o código PHP original sem alterações) ...
+    $numero_loja = sanitizar($_POST['numero_loja']);
+    $email = sanitizar($_POST['email']);
+    $senha = $_POST['senha'];
+    $confirmar = $_POST['confirmar_senha'];
+    $pergunta = sanitizar($_POST['pergunta']);
+    $resposta = sanitizar($_POST['resposta']);
+
+    if(strlen($senha) < 8) {
+        $erros[] = "A senha deve ter no mínimo 8 caracteres.";
+    } elseif($senha !== $confirmar) {
+        $erros[] = "As senhas não coincidem.";
+    } else {
+        try {
+            $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE email = ?");
+            $stmt->execute([$email]);
+            if($stmt->rowCount() > 0) {
+                $erros[] = "E-mail já cadastrado.";
+            } else {
+                $senha_hash = password_hash($senha, PASSWORD_DEFAULT);
+                $stmt = $pdo->prepare("INSERT INTO usuarios (numero_loja, email, senha, pergunta_seguranca, resposta_seguranca) VALUES (?, ?, ?, ?, ?)");
+                $stmt->execute([$numero_loja, $email, $senha_hash, $pergunta, $resposta]);
+
+                header("Location: index.php");
+                exit();
+            }
+        } catch(PDOException $e) {
+            $erros[] = "Erro ao cadastrar: " . $e->getMessage();
+        }
+    }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -43,13 +70,6 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <?php foreach($erros as $erro): ?>
                         <div><?= htmlspecialchars($erro) ?></div>
                     <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-
-            <?php if($sucesso): ?>
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i>
-                    <?= htmlspecialchars($sucesso) ?>
                 </div>
             <?php endif; ?>
 
