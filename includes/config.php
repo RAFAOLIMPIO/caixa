@@ -1,23 +1,18 @@
 <?php
 session_start();
 
-// Conexão com o banco (Railway externo)
-$host = 'yamanote.proxy.rlwy.net';
-$port = 57420;
+$host = 'mysql.railway.internal';
+$db   = 'railway';
 $user = 'root';
-$password = 'OlLAHAxVBKtEbKdpcpuryBKFcOlwtvhy';
-$database = 'railway';
+$pass = 'OLlAHAXvBKEtBkDkpcpuryBKFcOlwtvhy'; // substitua se a senha mudar
+$port = 3306;
 
 try {
-    $pdo = new PDO(
-        "mysql:host=$host;port=$port;dbname=$database;charset=utf8mb4",
-        $user,
-        $password
-    );
+    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-} catch(PDOException $e) {
-    die("Erro de conexão: " . $e->getMessage());
+} catch (PDOException $e) {
+    die("Erro na conexão com o banco: " . $e->getMessage());
 }
 
 function sanitizar($dado) {
