@@ -2,7 +2,7 @@
 session_start();
 
 // Conexão com o banco (Railway externo para uso no Render)
-$host = 'yamanoote.proxy.rlwy.net'; // Pegue o domínio visível na variável MYSQL_PUBLIC_URL
+$host = 'yamanote.proxy.rlwy.net'; // Pegue o domínio visível na variável MYSQL_PUBLIC_URL
 $port = 57420; // Pegue da mesma variável
 $user = 'root'; // MYSQLUSER
 $password = 'OlLAHAxVBKtEbKdpcpuryBKFcOlwtvhy'; // MYSQLPASSWORD
