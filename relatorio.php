@@ -6,14 +6,14 @@ if (!isset($_SESSION['usuario'])) {
     exit();
 }
 
-$loja_id = (int)$_SESSION['usuario']['id'];
+$numero_loja = (int)$_SESSION['usuario']['id'];
 
 // Processar Exclusão
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     $id = (int)$_GET['id'];
     try {
-        $stmt = $pdo->prepare("DELETE FROM vendas WHERE id = ? AND loja_id = ?");
-        $stmt->execute([$id, $loja_id]);
+        $stmt = $pdo->prepare("DELETE FROM vendas WHERE id = ? AND numero_loja = ?");
+        $stmt->execute([$id, $numero_loja]);
         $_SESSION['sucesso'] = "Venda excluída com sucesso!";
     } catch (PDOException $e) {
         $_SESSION['erro'] = "Erro ao excluir: " . $e->getMessage();
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         'forma_pagamento' => $_POST['forma_pagamento'] ?? '',
         'motoboy' => $_POST['motoboy'] ?? '',
         'id' => (int)$_POST['id'],
-        'loja_id' => $loja_id
+        'numero_loja' => $numero_loja
     ];
 
     try {
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             valor = :valor,
             forma_pagamento = :forma_pagamento,
             motoboy = :motoboy
-            WHERE id = :id AND loja_id = :loja_id
+            WHERE id = :id AND numero_loja = :numero_loja
         ");
         $stmt->execute($dados);
         $_SESSION['sucesso'] = "Venda atualizada com sucesso!";
@@ -58,10 +58,10 @@ try {
         COALESCE(f.nome, 'Não informado') as autozoner_nome
         FROM vendas v
         LEFT JOIN funcionarios f ON v.autozoner_id = f.id
-        WHERE v.loja_id = ?
+        WHERE v.numero_loja = ?
         ORDER BY v.criado_em DESC
     ");
-    $stmt->execute([$loja_id]);
+    $stmt->execute([$numero_loja]);
     $vendas = $stmt->fetchAll();
 } catch (PDOException $e) {
     die("Erro ao buscar vendas: " . $e->getMessage());
@@ -71,8 +71,8 @@ try {
 $venda_editar = null;
 if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) {
     try {
-        $stmt = $pdo->prepare("SELECT * FROM vendas WHERE id = ? AND loja_id = ?");
-        $stmt->execute([$_GET['id'], $loja_id]);
+        $stmt = $pdo->prepare("SELECT * FROM vendas WHERE id = ? AND numero_loja = ?");
+        $stmt->execute([$_GET['id'], $numero_loja]);
         $venda_editar = $stmt->fetch();
     } catch (PDOException $e) {
         die("Erro ao buscar venda: " . $e->getMessage());
