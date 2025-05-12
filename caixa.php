@@ -10,48 +10,45 @@ if (!isset($_SESSION['usuario'])) {
     exit();
 }
 
-$numero_loja = $_SESSION['usuario']['numero_loja'];
+$numero_loja = $_SESSION['usuario']['numero_loja'] ?? null;
 $erros = [];
 $sucesso = '';
 
-// =============================================
-// 1. PROCESSAR NOVA VENDA
-// =============================================
+// PROCESSAR NOVA VENDA
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cliente = htmlspecialchars(trim($_POST['cliente'] ?? ''));
-    $forma_pagamento = in_array($_POST['forma_pagamento'] ?? '', ['cartao', 'pix', 'dinheiro']) 
+    $forma_pagamento = in_array($_POST['forma_pagamento'] ?? '', ['Cartão', 'Pix', 'Dinheiro']) 
                         ? $_POST['forma_pagamento'] 
                         : '';
     $valor = (float)str_replace(',', '.', $_POST['valor'] ?? 0);
     $valor_recebido = (float)str_replace(',', '.', $_POST['valor_recebido'] ?? 0);
     $motoboy = htmlspecialchars(trim($_POST['motoboy'] ?? ''));
-    $autozoner_id = (int)($_POST['autozoner_id'] ?? 0);
+    $autozoner = htmlspecialchars(trim($_POST['autozoner'] ?? ''));
 
     if (empty($cliente)) $erros[] = "Nome do cliente é obrigatório!";
     if (empty($forma_pagamento)) $erros[] = "Selecione a forma de pagamento!";
     if ($valor <= 0) $erros[] = "Valor deve ser maior que zero!";
 
-    if ($forma_pagamento === 'dinheiro' && $valor_recebido < $valor) {
+    if ($forma_pagamento === 'Dinheiro' && $valor_recebido < $valor) {
         $erros[] = "Valor recebido insuficiente!";
     }
 
     if (empty($erros)) {
         try {
-            $troco = ($forma_pagamento === 'dinheiro') ? ($valor_recebido - $valor) : 0;
+            $troco = ($forma_pagamento === 'Dinheiro') ? ($valor_recebido - $valor) : 0;
 
             $stmt = $pdo->prepare("INSERT INTO vendas 
-                (cliente, forma_pagamento, valor, valor_recebido, troco, motoboy, pago, autozoner_id, numero_loja) 
-                VALUES (:cliente, :forma, :valor, :recebido, :troco, :motoboy, :pago, :autozoner, :loja)");
-            
+                (cliente, pagamento, valor, valor_recebido, troco, motoboy, autozoner, numero_loja) 
+                VALUES (:cliente, :pagamento, :valor, :recebido, :troco, :motoboy, :autozoner, :loja)");
+
             $stmt->execute([
                 ':cliente' => $cliente,
-                ':forma' => $forma_pagamento,
+                ':pagamento' => $forma_pagamento,
                 ':valor' => $valor,
-                ':recebido' => ($forma_pagamento === 'dinheiro') ? $valor_recebido : null,
+                ':recebido' => ($forma_pagamento === 'Dinheiro') ? $valor_recebido : null,
                 ':troco' => $troco,
                 ':motoboy' => $motoboy,
-                ':pago' => false,
-                ':autozoner' => $autozoner_id,
+                ':autozoner' => $autozoner,
                 ':loja' => $numero_loja
             ]);
 
@@ -63,25 +60,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// =============================================
-// 2. BUSCAR DADOS PARA O FORMULÁRIO
-// =============================================
+// BUSCAR DADOS PARA O FORMULÁRIO
 try {
-    $stmt_autozoners = $pdo->prepare("SELECT id, nome FROM funcionarios 
-                                      WHERE numero_loja = ? AND tipo = 'autozoner'");
-    $stmt_autozoners->execute([$numero_loja]);
-    $autozoners = $stmt_autozoners->fetchAll();
+    $stmt_autozoners = $pdo->query("SELECT DISTINCT autozoner FROM vendas WHERE numero_loja = '$numero_loja'");
+    $autozoners = $stmt_autozoners->fetchAll(PDO::FETCH_COLUMN);
 
-    $stmt_motoboys = $pdo->prepare("SELECT nome FROM funcionarios 
-                                    WHERE numero_loja = ? AND tipo = 'motoboy'");
-    $stmt_motoboys->execute([$numero_loja]);
+    $stmt_motoboys = $pdo->query("SELECT DISTINCT motoboy FROM vendas WHERE numero_loja = '$numero_loja'");
     $motoboys = $stmt_motoboys->fetchAll(PDO::FETCH_COLUMN);
 
-    $stmt_vendas = $pdo->prepare("SELECT *, DATE_FORMAT(criado_em, '%d/%m/%Y %H:%i') as data_formatada 
-                                  FROM vendas 
-                                  WHERE numero_loja = ? 
-                                  ORDER BY criado_em DESC 
-                                  LIMIT 10");
+    $stmt_vendas = $pdo->prepare("SELECT *, DATE_FORMAT(data, '%d/%m/%Y %H:%i') as data_formatada 
+                                FROM vendas 
+                                WHERE numero_loja = ? 
+                                ORDER BY data DESC 
+                                LIMIT 10");
     $stmt_vendas->execute([$numero_loja]);
     $vendas = $stmt_vendas->fetchAll();
 
