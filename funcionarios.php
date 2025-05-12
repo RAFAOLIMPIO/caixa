@@ -15,11 +15,11 @@ if (!isset($_SESSION['usuario']['id'])) {
 // =============================================
 // 2. VALIDAÇÃO DO ID DA LOJA
 // =============================================
-$loja_id = (int)$_SESSION['usuario']['id'];
+$numero_loja = (int)$_SESSION['usuario']['id'];
 
 try {
     $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE id = ?");
-    $stmt->execute([$loja_id]);
+    $stmt->execute([$numero_loja]);
     if ($stmt->rowCount() === 0) {
         session_destroy();
         die("Erro crítico: Loja não encontrada! Faça login novamente.");
@@ -45,12 +45,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($erros)) {
         try {
             if ($funcionario_id) {
-                $stmt = $pdo->prepare("UPDATE funcionarios SET nome = ?, tipo = ? WHERE id = ? AND loja_id = ?");
-                $stmt->execute([$nome, $tipo, $funcionario_id, $loja_id]);
+                $stmt = $pdo->prepare("UPDATE funcionarios SET nome = ?, tipo = ? WHERE id = ? AND numero_loja = ?");
+                $stmt->execute([$nome, $tipo, $funcionario_id, $numero_loja]);
                 $sucesso = "Funcionário atualizado!";
             } else {
-                $stmt = $pdo->prepare("INSERT INTO funcionarios (nome, tipo, loja_id) VALUES (?, ?, ?)");
-                $stmt->execute([$nome, $tipo, $loja_id]);
+                $stmt = $pdo->prepare("INSERT INTO funcionarios (nome, tipo, numero_loja) VALUES (?, ?, ?)");
+                $stmt->execute([$nome, $tipo, $numero_loja]);
                 $sucesso = "Funcionário cadastrado!";
             }
         } catch (PDOException $e) {
@@ -66,8 +66,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if (isset($_GET['excluir'])) {
     $id_excluir = (int)$_GET['excluir'];
     try {
-        $stmt = $pdo->prepare("DELETE FROM funcionarios WHERE id = ? AND loja_id = ?");
-        $stmt->execute([$id_excluir, $loja_id]);
+        $stmt = $pdo->prepare("DELETE FROM funcionarios WHERE id = ? AND numero_loja = ?");
+        $stmt->execute([$id_excluir, $numero_loja]);
         $sucesso = $stmt->rowCount() > 0 ? "Excluído com sucesso!" : "Registro não encontrado";
     } catch (PDOException $e) {
         $erros[] = "Erro ao excluir: " . $e->getMessage();
@@ -80,17 +80,17 @@ if (isset($_GET['excluir'])) {
 try {
     $editar = [];
     if (isset($_GET['editar'])) {
-        $stmt = $pdo->prepare("SELECT * FROM funcionarios WHERE id = ? AND loja_id = ?");
-        $stmt->execute([(int)$_GET['editar'], $loja_id]);
+        $stmt = $pdo->prepare("SELECT * FROM funcionarios WHERE id = ? AND numero_loja = ?");
+        $stmt->execute([(int)$_GET['editar'], $numero_loja]);
         $editar = $stmt->fetch() ?: [];
     }
 
-    $stmt_autozoners = $pdo->prepare("SELECT * FROM funcionarios WHERE loja_id = ? AND tipo = 'autozoner' ORDER BY nome");
-    $stmt_autozoners->execute([$loja_id]);
+    $stmt_autozoners = $pdo->prepare("SELECT * FROM funcionarios WHERE numero_loja = ? AND tipo = 'autozoner' ORDER BY nome");
+    $stmt_autozoners->execute([$numero_loja]);
     $autozoners = $stmt_autozoners->fetchAll();
 
-    $stmt_motoboys = $pdo->prepare("SELECT * FROM funcionarios WHERE loja_id = ? AND tipo = 'motoboy' ORDER BY nome");
-    $stmt_motoboys->execute([$loja_id]);
+    $stmt_motoboys = $pdo->prepare("SELECT * FROM funcionarios WHERE numero_loja = ? AND tipo = 'motoboy' ORDER BY nome");
+    $stmt_motoboys->execute([$numero_loja]);
     $motoboys = $stmt_motoboys->fetchAll();
 
 } catch (PDOException $e) {
