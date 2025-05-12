@@ -27,11 +27,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $motoboy = htmlspecialchars(trim($_POST['motoboy'] ?? ''));
     $autozoner_id = (int)($_POST['autozoner_id'] ?? 0);
 
-    // Validações
     if (empty($cliente)) $erros[] = "Nome do cliente é obrigatório!";
     if (empty($forma_pagamento)) $erros[] = "Selecione a forma de pagamento!";
     if ($valor <= 0) $erros[] = "Valor deve ser maior que zero!";
-    
+
     if ($forma_pagamento === 'dinheiro' && $valor_recebido < $valor) {
         $erros[] = "Valor recebido insuficiente!";
     }
@@ -67,23 +66,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // 2. BUSCAR DADOS PARA O FORMULÁRIO
 // =============================================
 try {
-    // Lista de Autozoners
     $stmt_autozoners = $pdo->prepare("SELECT id, nome FROM funcionarios 
                                     WHERE numero_loja = ? AND tipo = 'autozoner'");
     $stmt_autozoners->execute([$numero_loja]);
     $autozoners = $stmt_autozoners->fetchAll();
 
-    // Lista de Motoboys
     $stmt_motoboys = $pdo->prepare("SELECT nome FROM funcionarios 
                                   WHERE numero_loja = ? AND tipo = 'motoboy'");
     $stmt_motoboys->execute([$numero_loja]);
     $motoboys = $stmt_motoboys->fetchAll(PDO::FETCH_COLUMN);
 
-    // Últimas vendas
-    $stmt_vendas = $pdo->prepare("SELECT *, DATE_FORMAT(criado_em, '%d/%m/%Y %H:%i') as data_formatada 
+    // COLUNA corrigida: criado_em → data
+    $stmt_vendas = $pdo->prepare("SELECT *, DATE_FORMAT(data, '%d/%m/%Y %H:%i') as data_formatada 
                                 FROM vendas 
                                 WHERE numero_loja = ? 
-                                ORDER BY criado_em DESC 
+                                ORDER BY data DESC 
                                 LIMIT 10");
     $stmt_vendas->execute([$numero_loja]);
     $vendas = $stmt_vendas->fetchAll();
@@ -92,6 +89,7 @@ try {
     die("Erro ao buscar dados: " . $e->getMessage());
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -179,7 +177,7 @@ try {
                                 <input type="number" step="0.01" name="valor" class="form-input" required>
                             </div>
 
-                            <div class="dinheiro-section" id="dinheiroSection">
+                            <div class="dinheiro-section" id="dinheiroSection" style="display: none;">
                                 <div class="form-group">
                                     <label class="input-label">
                                         <i class="fas fa-hand-holding-usd"></i>
@@ -255,25 +253,28 @@ try {
     </div>
 
     <script>
-        // Controle dinâmico do campo de dinheiro
+        // Mostrar/ocultar campo de dinheiro
         const formaPagamento = document.getElementById('formaPagamento');
         const dinheiroSection = document.getElementById('dinheiroSection');
+        const valorInput = document.querySelector('[name="valor"]');
+        const valorRecebidoInput = document.querySelector('[name="valor_recebido"]');
+        const trocoInput = document.querySelector('[name="troco"]');
 
-        formaPagamento.addEventListener('change', function() {
-            dinheiroSection.style.display = this.value === 'dinheiro' ? 'block' : 'none';
-            
+        formaPagamento.addEventListener('change', function () {
             if (this.value === 'dinheiro') {
-                document.querySelector('[name="valor_recebido"]').required = true;
+                dinheiroSection.style.display = 'block';
+                valorRecebidoInput.required = true;
             } else {
-                document.querySelector('[name="valor_recebido"]').required = false;
+                dinheiroSection.style.display = 'none';
+                valorRecebidoInput.required = false;
+                trocoInput.value = '';
             }
         });
 
-        // Cálculo automático do troco
-        document.querySelector('[name="valor_recebido"]')?.addEventListener('input', function() {
-            const valor = parseFloat(document.querySelector('[name="valor"]').value) || 0;
+        valorRecebidoInput?.addEventListener('input', function () {
+            const valor = parseFloat(valorInput.value) || 0;
             const recebido = parseFloat(this.value) || 0;
-            document.querySelector('[name="troco"]').value = (recebido - valor).toFixed(2);
+            trocoInput.value = (recebido - valor).toFixed(2);
         });
     </script>
 </body>
