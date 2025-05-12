@@ -8,7 +8,6 @@ if (!isset($_SESSION['usuario'])) {
 
 $numero_loja = (int)$_SESSION['usuario']['id'];
 
-// Processar Exclusão
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     $id = (int)$_GET['id'];
     try {
@@ -22,7 +21,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
     exit();
 }
 
-// Processar Edição
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update') {
     $dados = [
         'cliente' => $_POST['cliente'] ?? '',
@@ -50,7 +48,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit();
 }
 
-// Buscar Vendas (corrigido: criado_em → data)
 try {
     $stmt = $pdo->prepare("SELECT 
         v.*,
@@ -67,7 +64,6 @@ try {
     die("Erro ao buscar vendas: " . $e->getMessage());
 }
 
-// Verificar Edição
 $venda_editar = null;
 if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) {
     try {
@@ -79,179 +75,94 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Relatório de Vendas</title>
-    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <div class="main-container">
-        <main class="content-area">
-            <div class="card">
-                <div class="flex-header">
-                    <h1 class="brand-title">
-                        <i class="fas fa-chart-line"></i>
-                        Relatório de Vendas
-                    </h1>
-                    <a href="menu.php" class="btn btn-secondary hover-scale">
-                        <i class="fas fa-arrow-left"></i>
-                        Voltar
-                    </a>
-                </div>
+<body class="bg-black text-white min-h-screen p-4">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold"><i class="fas fa-chart-line mr-2"></i>Relatório de Vendas</h1>
+            <a href="menu.php" class="text-sm text-purple-400 hover:underline"><i class="fas fa-arrow-left"></i> Voltar ao Menu</a>
+        </div>
 
-                <?php if (isset($_SESSION['erro'])): ?>
-                    <div class="alert alert-error">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <?= htmlspecialchars($_SESSION['erro']) ?>
-                        <?php unset($_SESSION['erro']); ?>
+        <?php if (isset($_SESSION['erro'])): ?>
+            <div class="bg-red-600 p-3 rounded mb-4"><?= htmlspecialchars($_SESSION['erro']); unset($_SESSION['erro']); ?></div>
+        <?php endif; ?>
+        <?php if (isset($_SESSION['sucesso'])): ?>
+            <div class="bg-green-600 p-3 rounded mb-4"><?= htmlspecialchars($_SESSION['sucesso']); unset($_SESSION['sucesso']); ?></div>
+        <?php endif; ?>
+
+        <?php if ($venda_editar): ?>
+            <div class="bg-gray-800 p-6 rounded mb-6">
+                <h2 class="text-lg font-bold mb-4"><i class="fas fa-edit"></i> Editar Venda</h2>
+                <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="hidden" name="action" value="update">
+                    <input type="hidden" name="id" value="<?= $venda_editar['id'] ?>">
+                    <div>
+                        <label>Cliente</label>
+                        <input type="text" name="cliente" value="<?= htmlspecialchars($venda_editar['cliente']) ?>" class="w-full bg-gray-700 p-2 rounded" required>
                     </div>
-                <?php endif; ?>
-
-                <?php if (isset($_SESSION['sucesso'])): ?>
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle"></i>
-                        <?= htmlspecialchars($_SESSION['sucesso']) ?>
-                        <?php unset($_SESSION['sucesso']); ?>
+                    <div>
+                        <label>Valor</label>
+                        <input type="number" name="valor" step="0.01" value="<?= $venda_editar['valor'] ?>" class="w-full bg-gray-700 p-2 rounded" required>
                     </div>
-                <?php endif; ?>
-
-                <?php if (isset($venda_editar)): ?>
-                <div class="modal-overlay active">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h2 class="brand-title">
-                                <i class="fas fa-edit"></i>
-                                Editar Venda
-                            </h2>
-                            <a href="relatorio.php" class="btn btn-icon">
-                                <i class="fas fa-times"></i>
-                            </a>
-                        </div>
-                        
-                        <form method="POST" class="form-stack">
-                            <input type="hidden" name="action" value="update">
-                            <input type="hidden" name="id" value="<?= $venda_editar['id'] ?>">
-                            
-                            <div class="form-group">
-                                <label class="input-label">
-                                    <i class="fas fa-user"></i>
-                                    Cliente
-                                </label>
-                                <input type="text" 
-                                       name="cliente" 
-                                       class="form-input"
-                                       value="<?= htmlspecialchars($venda_editar['cliente']) ?>" 
-                                       required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="input-label">
-                                    <i class="fas fa-coins"></i>
-                                    Valor
-                                </label>
-                                <input type="number" 
-                                       step="0.01" 
-                                       name="valor" 
-                                       class="form-input"
-                                       value="<?= $venda_editar['valor'] ?>" 
-                                       required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="input-label">
-                                    <i class="fas fa-money-bill-wave"></i>
-                                    Forma de Pagamento
-                                </label>
-                                <div class="select-wrapper">
-                                    <select name="forma_pagamento" class="form-input" required>
-                                        <option value="pix" <?= $venda_editar['forma_pagamento'] === 'pix' ? 'selected' : '' ?>>PIX</option>
-                                        <option value="credito" <?= $venda_editar['forma_pagamento'] === 'credito' ? 'selected' : '' ?>>Cartão de Crédito</option>
-                                        <option value="debito" <?= $venda_editar['forma_pagamento'] === 'debito' ? 'selected' : '' ?>>Cartão de Débito</option>
-                                        <option value="dinheiro" <?= $venda_editar['forma_pagamento'] === 'dinheiro' ? 'selected' : '' ?>>Dinheiro</option>
-                                    </select>
-                                    <i class="fas fa-chevron-down select-arrow"></i>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="input-label">
-                                    <i class="fas fa-motorcycle"></i>
-                                    Motoboy
-                                </label>
-                                <input type="text" 
-                                       name="motoboy" 
-                                       class="form-input"
-                                       value="<?= htmlspecialchars($venda_editar['motoboy']) ?>">
-                            </div>
-                            
-                            <div class="form-group grid-col-2">
-                                <button type="submit" class="btn btn-primary hover-scale">
-                                    <i class="fas fa-save"></i>
-                                    Salvar
-                                </button>
-                                <a href="relatorio.php" class="btn btn-danger hover-scale">
-                                    <i class="fas fa-times"></i>
-                                    Cancelar
-                                </a>
-                            </div>
-                        </form>
+                    <div>
+                        <label>Forma de Pagamento</label>
+                        <select name="forma_pagamento" class="w-full bg-gray-700 p-2 rounded" required>
+                            <option value="pix" <?= $venda_editar['forma_pagamento'] === 'pix' ? 'selected' : '' ?>>PIX</option>
+                            <option value="credito" <?= $venda_editar['forma_pagamento'] === 'credito' ? 'selected' : '' ?>>Crédito</option>
+                            <option value="debito" <?= $venda_editar['forma_pagamento'] === 'debito' ? 'selected' : '' ?>>Débito</option>
+                            <option value="dinheiro" <?= $venda_editar['forma_pagamento'] === 'dinheiro' ? 'selected' : '' ?>>Dinheiro</option>
+                        </select>
                     </div>
-                </div>
-                <?php endif; ?>
-
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th><i class="fas fa-calendar-alt"></i> Data</th>
-                                <th><i class="fas fa-user"></i> Cliente</th>
-                                <th><i class="fas fa-dollar-sign"></i> Valor</th>
-                                <th><i class="fas fa-wallet"></i> Pagamento</th>
-                                <th><i class="fas fa-user-tie"></i> Autozoner</th>
-                                <th><i class="fas fa-motorcycle"></i> Motoboy</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($vendas as $venda): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($venda['data_formatada']) ?></td>
-                                <td><?= htmlspecialchars($venda['cliente']) ?></td>
-                                <td>R$ <?= number_format($venda['valor'], 2, ',', '.') ?></td>
-                                <td>
-                                    <span class="badge badge-<?= $venda['forma_pagamento'] ?>">
-                                        <?= ucfirst($venda['forma_pagamento']) ?>
-                                    </span>
-                                </td>
-                                <td><?= htmlspecialchars($venda['autozoner_nome']) ?></td>
-                                <td><?= htmlspecialchars($venda['motoboy'] ?? 'Não informado') ?></td>
-                                <td>
-                                    <div class="flex-actions">
-                                        <a href="relatorio.php?action=edit&id=<?= $venda['id'] ?>" 
-                                           class="btn btn-success hover-scale btn-icon"
-                                           data-tooltip="Editar">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="relatorio.php?action=delete&id=<?= $venda['id'] ?>" 
-                                           class="btn btn-danger hover-scale btn-icon"
-                                           data-tooltip="Excluir"
-                                           onclick="return confirm('Tem certeza que deseja excluir esta venda?')">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
+                    <div>
+                        <label>Motoboy</label>
+                        <input type="text" name="motoboy" value="<?= htmlspecialchars($venda_editar['motoboy']) ?>" class="w-full bg-gray-700 p-2 rounded">
+                    </div>
+                    <div class="col-span-2 flex justify-end space-x-4 mt-2">
+                        <button type="submit" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded">Salvar</button>
+                        <a href="relatorio.php" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">Cancelar</a>
+                    </div>
+                </form>
             </div>
-        </main>
+        <?php endif; ?>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-800">
+                        <th class="p-3">Data</th>
+                        <th class="p-3">Cliente</th>
+                        <th class="p-3">Valor</th>
+                        <th class="p-3">Pagamento</th>
+                        <th class="p-3">Autozoner</th>
+                        <th class="p-3">Motoboy</th>
+                        <th class="p-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($vendas as $venda): ?>
+                        <tr class="border-b border-gray-700 hover:bg-gray-800">
+                            <td class="p-3"><?= $venda['data_formatada'] ?></td>
+                            <td class="p-3"><?= htmlspecialchars($venda['cliente']) ?></td>
+                            <td class="p-3">R$ <?= number_format($venda['valor'], 2, ',', '.') ?></td>
+                            <td class="p-3"><?= ucfirst($venda['forma_pagamento']) ?></td>
+                            <td class="p-3"><?= htmlspecialchars($venda['autozoner_nome']) ?></td>
+                            <td class="p-3"><?= htmlspecialchars($venda['motoboy']) ?></td>
+                            <td class="p-3 flex space-x-2">
+                                <a href="relatorio.php?action=edit&id=<?= $venda['id'] ?>" class="text-green-400 hover:text-green-300"><i class="fas fa-edit"></i></a>
+                                <a href="relatorio.php?action=delete&id=<?= $venda['id'] ?>" onclick="return confirm('Deseja excluir esta venda?')" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </body>
 </html>
