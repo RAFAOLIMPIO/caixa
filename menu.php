@@ -11,44 +11,35 @@ if (!isset($_SESSION['usuario'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu Principal</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>AutoGest | Menu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <div class="main-container">
-        <main class="content-area">
-            <div class="card" style="max-width: 600px; margin: 2rem auto;">
-                <div class="brand-header">
-                    <h1 class="brand-title">
-                        <i class="fas fa-home"></i>
-                        Bem-vindo, <?= htmlspecialchars($_SESSION['usuario']['numero_loja']) ?>
-                    </h1>
-                </div>
+<body class="bg-black text-white min-h-screen flex items-center justify-center px-4">
+    <div class="w-full max-w-xl bg-gray-900 bg-opacity-80 p-8 rounded-2xl shadow-2xl">
+        <div class="text-center mb-8">
+            <img src="logo.png" alt="AutoGest" class="mx-auto w-20 h-20 mb-4">
+            <h1 class="text-3xl font-bold">Bem-vindo, <?= htmlspecialchars($_SESSION['usuario']['numero_loja']) ?> 👋</h1>
+        </div>
 
-                <nav class="grid-links">
-                    <a href="caixa.php" class="btn btn-primary hover-scale">
-                        <i class="fas fa-cash-register"></i>
-                        Controle de Caixa
-                    </a>
-                    
-                    <a href="relatorio.php" class="btn btn-primary hover-scale">
-                        <i class="fas fa-chart-line"></i>
-                        Relatórios
-                    </a>
-                    
-                    <a href="funcionarios.php" class="btn btn-primary hover-scale">
-                        <i class="fas fa-users-cog"></i>
-                        Funcionários
-                    </a>
-                    
-                    <a href="logout.php" class="btn btn-danger hover-scale">
-                        <i class="fas fa-sign-out-alt"></i>
-                        Sair do Sistema
-                    </a>
-                </nav>
-            </div>
-        </main>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-center">
+            <a href="caixa.php" class="bg-purple-600 hover:bg-purple-700 p-4 rounded-xl shadow transition-all">
+                <i class="fas fa-cash-register text-2xl mb-2 block"></i>
+                <span class="font-semibold">Controle de Caixa</span>
+            </a>
+            <a href="relatorio.php" class="bg-purple-600 hover:bg-purple-700 p-4 rounded-xl shadow transition-all">
+                <i class="fas fa-chart-line text-2xl mb-2 block"></i>
+                <span class="font-semibold">Relatórios</span>
+            </a>
+            <a href="funcionarios.php" class="bg-purple-600 hover:bg-purple-700 p-4 rounded-xl shadow transition-all">
+                <i class="fas fa-users-cog text-2xl mb-2 block"></i>
+                <span class="font-semibold">Funcionários</span>
+            </a>
+            <a href="logout.php" class="bg-red-600 hover:bg-red-700 p-4 rounded-xl shadow transition-all">
+                <i class="fas fa-sign-out-alt text-2xl mb-2 block"></i>
+                <span class="font-semibold">Sair do Sistema</span>
+            </a>
+        </div>
     </div>
 </body>
 </html>
