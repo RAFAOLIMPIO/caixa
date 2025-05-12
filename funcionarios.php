@@ -1,10 +1,8 @@
 <?php
 include 'includes/config.php';
-
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// 1. VERIFICAÇÃO DE AUTENTICAÇÃO
 if (!isset($_SESSION['usuario']['id'])) {
     header("Location: login.php");
     exit();
@@ -14,7 +12,6 @@ $numero_loja = (int)$_SESSION['usuario']['id'];
 $erros = [];
 $sucesso = '';
 
-// 2. INSERÇÃO/ATUALIZAÇÃO
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = htmlspecialchars(trim($_POST['nome'] ?? ''));
     $tipo = $_POST['tipo'] ?? '';
@@ -40,7 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// 3. EXCLUSÃO
 if (isset($_GET['excluir'])) {
     $id = (int)$_GET['excluir'];
     try {
@@ -52,7 +48,6 @@ if (isset($_GET['excluir'])) {
     }
 }
 
-// 4. EDIÇÃO
 $editar = [];
 if (isset($_GET['editar'])) {
     $stmt = $pdo->prepare("SELECT * FROM funcionarios WHERE id = ? AND numero_loja = ?");
@@ -60,107 +55,82 @@ if (isset($_GET['editar'])) {
     $editar = $stmt->fetch() ?: [];
 }
 
-// 5. LISTAGEM
 $stmt = $pdo->prepare("SELECT * FROM funcionarios WHERE numero_loja = ? ORDER BY tipo, nome");
 $stmt->execute([$numero_loja]);
 $funcionarios = $stmt->fetchAll();
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Funcionários</title>
-    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <div class="main-container">
-        <main class="content-area">
-            <div class="card">
-                <div class="flex-header">
-                    <h1 class="brand-title">
-                        <i class="fas fa-users-cog"></i> Gestão de Funcionários
-                    </h1>
-                    <a href="menu.php" class="btn btn-secondary hover-scale">
-                        <i class="fas fa-arrow-left"></i> Voltar ao Menu
-                    </a>
-                </div>
+<body class="bg-black text-white min-h-screen p-4">
+    <div class="max-w-5xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold"><i class="fas fa-users-cog mr-2"></i>Gestão de Funcionários</h1>
+            <a href="menu.php" class="text-sm text-purple-400 hover:underline"><i class="fas fa-arrow-left"></i> Voltar ao Menu</a>
+        </div>
 
-                <?php if (!empty($erros)): ?>
-                    <div class="alert alert-error">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <?= implode('<br>', array_map('htmlspecialchars', $erros)) ?>
-                    </div>
-                <?php endif; ?>
-
-                <?php if ($sucesso): ?>
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle"></i>
-                        <?= htmlspecialchars($sucesso) ?>
-                    </div>
-                <?php endif; ?>
-
-                <section class="card form-section">
-                    <h2 class="section-title">
-                        <i class="fas fa-<?= empty($editar) ? 'plus' : 'edit' ?>"></i>
-                        <?= empty($editar) ? 'Cadastrar Novo' : 'Editar' ?> Funcionário
-                    </h2>
-
-                    <form method="POST" class="form-stack">
-                        <input type="hidden" name="funcionario_id" value="<?= htmlspecialchars($editar['id'] ?? '') ?>">
-                        
-                        <div class="form-group">
-                            <label class="input-label"><i class="fas fa-user"></i> Nome</label>
-                            <input type="text" name="nome" class="form-input" value="<?= htmlspecialchars($editar['nome'] ?? '') ?>" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="input-label"><i class="fas fa-user-tag"></i> Tipo</label>
-                            <select name="tipo" class="form-input" required>
-                                <option value="">Selecione...</option>
-                                <option value="autozoner" <?= ($editar['tipo'] ?? '') === 'autozoner' ? 'selected' : '' ?>>Autozoner</option>
-                                <option value="motoboy" <?= ($editar['tipo'] ?? '') === 'motoboy' ? 'selected' : '' ?>>Motoboy</option>
-                            </select>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary hover-scale">
-                            <i class="fas fa-save"></i>
-                            <?= empty($editar) ? 'Cadastrar' : 'Atualizar' ?>
-                        </button>
-                    </form>
-                </section>
-
-                <section class="card">
-                    <h2 class="section-title"><i class="fas fa-list"></i> Funcionários Cadastrados</h2>
-                    <?php if (empty($funcionarios)): ?>
-                        <div class="empty-state">
-                            <i class="fas fa-user-slash"></i> Nenhum funcionário cadastrado
-                        </div>
-                    <?php else: ?>
-                        <div class="funcionarios-list">
-                            <?php foreach ($funcionarios as $funcionario): ?>
-                                <div class="funcionario-item">
-                                    <div class="funcionario-info">
-                                        <h3><?= htmlspecialchars($funcionario['nome']) ?></h3>
-                                        <span class="funcionario-tipo"><?= ucfirst($funcionario['tipo']) ?></span>
-                                    </div>
-                                    <div class="funcionario-actions">
-                                        <a href="?editar=<?= $funcionario['id'] ?>" class="btn btn-success btn-icon hover-scale" title="Editar">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="?excluir=<?= $funcionario['id'] ?>" class="btn btn-danger btn-icon hover-scale" onclick="return confirm('Confirmar exclusão?')" title="Excluir">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
-                </section>
+        <?php if (!empty($erros)): ?>
+            <div class="bg-red-600 p-3 rounded mb-4">
+                <?= implode('<br>', array_map('htmlspecialchars', $erros)) ?>
             </div>
-        </main>
+        <?php endif; ?>
+
+        <?php if ($sucesso): ?>
+            <div class="bg-green-600 p-3 rounded mb-4"><?= htmlspecialchars($sucesso) ?></div>
+        <?php endif; ?>
+
+        <div class="bg-gray-900 p-6 rounded-xl mb-6">
+            <h2 class="text-lg font-bold mb-4">
+                <i class="fas fa-<?= empty($editar) ? 'plus' : 'edit' ?>"></i> <?= empty($editar) ? 'Cadastrar Novo' : 'Editar' ?> Funcionário
+            </h2>
+            <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="hidden" name="funcionario_id" value="<?= htmlspecialchars($editar['id'] ?? '') ?>">
+                <div>
+                    <label>Nome</label>
+                    <input type="text" name="nome" class="w-full p-2 bg-gray-800 border border-gray-700 rounded" value="<?= htmlspecialchars($editar['nome'] ?? '') ?>" required>
+                </div>
+                <div>
+                    <label>Tipo</label>
+                    <select name="tipo" class="w-full p-2 bg-gray-800 border border-gray-700 rounded" required>
+                        <option value="">Selecione...</option>
+                        <option value="autozoner" <?= ($editar['tipo'] ?? '') === 'autozoner' ? 'selected' : '' ?>>Autozoner</option>
+                        <option value="motoboy" <?= ($editar['tipo'] ?? '') === 'motoboy' ? 'selected' : '' ?>>Motoboy</option>
+                    </select>
+                </div>
+                <div class="col-span-2 flex justify-end">
+                    <button type="submit" class="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded text-white font-bold">
+                        <i class="fas fa-save mr-2"></i><?= empty($editar) ? 'Cadastrar' : 'Atualizar' ?>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="bg-gray-800 p-6 rounded-xl">
+            <h2 class="text-lg font-bold mb-4"><i class="fas fa-list mr-2"></i>Funcionários Cadastrados</h2>
+            <?php if (empty($funcionarios)): ?>
+                <div class="text-gray-400"><i class="fas fa-user-slash mr-2"></i>Nenhum funcionário cadastrado</div>
+            <?php else: ?>
+                <div class="space-y-4">
+                    <?php foreach ($funcionarios as $funcionario): ?>
+                        <div class="flex justify-between items-center bg-gray-700 p-4 rounded">
+                            <div>
+                                <h3 class="font-bold"><?= htmlspecialchars($funcionario['nome']) ?></h3>
+                                <span class="text-sm text-gray-300"><?= ucfirst($funcionario['tipo']) ?></span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <a href="?editar=<?= $funcionario['id'] ?>" class="text-green-400 hover:text-green-300"><i class="fas fa-edit"></i></a>
+                                <a href="?excluir=<?= $funcionario['id'] ?>" onclick="return confirm('Confirmar exclusão?')" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></a>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
     </div>
 </body>
 </html>
