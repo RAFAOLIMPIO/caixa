@@ -50,16 +50,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit();
 }
 
-// Buscar Vendas
+// Buscar Vendas (corrigido: criado_em → data)
 try {
     $stmt = $pdo->prepare("SELECT 
         v.*,
-        DATE_FORMAT(v.criado_em, '%d/%m/%Y %H:%i') as data_formatada,
+        DATE_FORMAT(v.data, '%d/%m/%Y %H:%i') as data_formatada,
         COALESCE(f.nome, 'Não informado') as autozoner_nome
         FROM vendas v
         LEFT JOIN funcionarios f ON v.autozoner_id = f.id
         WHERE v.numero_loja = ?
-        ORDER BY v.criado_em DESC
+        ORDER BY v.data DESC
     ");
     $stmt->execute([$numero_loja]);
     $vendas = $stmt->fetchAll();
@@ -79,6 +79,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -171,6 +172,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                                         <option value="pix" <?= $venda_editar['forma_pagamento'] === 'pix' ? 'selected' : '' ?>>PIX</option>
                                         <option value="credito" <?= $venda_editar['forma_pagamento'] === 'credito' ? 'selected' : '' ?>>Cartão de Crédito</option>
                                         <option value="debito" <?= $venda_editar['forma_pagamento'] === 'debito' ? 'selected' : '' ?>>Cartão de Débito</option>
+                                        <option value="dinheiro" <?= $venda_editar['forma_pagamento'] === 'dinheiro' ? 'selected' : '' ?>>Dinheiro</option>
                                     </select>
                                     <i class="fas fa-chevron-down select-arrow"></i>
                                 </div>
