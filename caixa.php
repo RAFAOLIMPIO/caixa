@@ -10,7 +10,7 @@ if (!isset($_SESSION['usuario'])) {
     exit();
 }
 
-$loja_id = (int)$_SESSION['usuario']['id'];
+$numero_loja = (int)$_SESSION['usuario']['id'];
 $erros = [];
 $sucesso = '';
 
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $troco = ($forma_pagamento === 'dinheiro') ? ($valor_recebido - $valor) : 0;
 
             $stmt = $pdo->prepare("INSERT INTO vendas 
-                (cliente, forma_pagamento, valor, valor_recebido, troco, motoboy, autozoner_id, loja_id) 
+                (cliente, forma_pagamento, valor, valor_recebido, troco, motoboy, autozoner_id, numero_loja) 
                 VALUES (:cliente, :forma, :valor, :recebido, :troco, :motoboy, :autozoner, :loja)");
             
             $stmt->execute([
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':troco' => $troco,
                 ':motoboy' => $motoboy,
                 ':autozoner' => $autozoner_id,
-                ':loja' => $loja_id
+                ':loja' => $numero_loja
             ]);
 
             $sucesso = "Venda registrada com sucesso!";
@@ -69,23 +69,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 try {
     // Lista de Autozoners
     $stmt_autozoners = $pdo->prepare("SELECT id, nome FROM funcionarios 
-                                    WHERE loja_id = ? AND tipo = 'autozoner'");
-    $stmt_autozoners->execute([$loja_id]);
+                                    WHERE numero_loja = ? AND tipo = 'autozoner'");
+    $stmt_autozoners->execute([$numero_loja]);
     $autozoners = $stmt_autozoners->fetchAll();
 
     // Lista de Motoboys
     $stmt_motoboys = $pdo->prepare("SELECT nome FROM funcionarios 
-                                  WHERE loja_id = ? AND tipo = 'motoboy'");
-    $stmt_motoboys->execute([$loja_id]);
+                                  WHERE numero_loja = ? AND tipo = 'motoboy'");
+    $stmt_motoboys->execute([$numero_loja]);
     $motoboys = $stmt_motoboys->fetchAll(PDO::FETCH_COLUMN);
 
     // Últimas vendas
     $stmt_vendas = $pdo->prepare("SELECT *, DATE_FORMAT(criado_em, '%d/%m/%Y %H:%i') as data_formatada 
                                 FROM vendas 
-                                WHERE loja_id = ? 
+                                WHERE numero_loja = ? 
                                 ORDER BY criado_em DESC 
                                 LIMIT 10");
-    $stmt_vendas->execute([$loja_id]);
+    $stmt_vendas->execute([$numero_loja]);
     $vendas = $stmt_vendas->fetchAll();
 
 } catch (PDOException $e) {
