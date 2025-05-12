@@ -1,20 +1,17 @@
 <?php
-ob_start(); // Inicia o buffer de saída para evitar erro de cabeçalhos
+ob_start(); 
 require 'includes/config.php';
 
 $etapa = isset($_GET['etapa']) ? (int) $_GET['etapa'] : 1;
 $erros = [];
 $sucesso = '';
 
-// Processar recuperação de senha
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($etapa == 1) {
         $numero_loja = sanitizar($_POST['numero_loja'] ?? '');
-
         try {
             $stmt = $pdo->prepare("SELECT pergunta_seguranca FROM usuarios WHERE numero_loja = ?");
             $stmt->execute([$numero_loja]);
-
             if ($stmt->rowCount() > 0) {
                 $usuario = $stmt->fetch();
                 $_SESSION['recuperacao'] = [
@@ -30,15 +27,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } catch (PDOException $e) {
             $erros[] = "Erro no sistema: " . $e->getMessage();
         }
-    }
-    elseif ($etapa == 2) {
+    } elseif ($etapa == 2) {
         if (!isset($_SESSION['recuperacao'])) {
             header("Location: recuperar_senha.php");
             exit();
         }
 
         $resposta = sanitizar($_POST['resposta'] ?? '');
-
         try {
             $stmt = $pdo->prepare("SELECT resposta_seguranca FROM usuarios WHERE numero_loja = ?");
             $stmt->execute([$_SESSION['recuperacao']['numero_loja']]);
@@ -54,8 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } catch (PDOException $e) {
             $erros[] = "Erro no sistema: " . $e->getMessage();
         }
-    }
-    elseif ($etapa == 3) {
+    } elseif ($etapa == 3) {
         if (!isset($_SESSION['recuperacao'])) {
             header("Location: recuperar_senha.php");
             exit();
@@ -64,17 +58,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $nova_senha = sanitizar($_POST['nova_senha'] ?? '');
         $confirmar_senha = sanitizar($_POST['confirmar_senha'] ?? '');
 
-        if (strlen($nova_senha) < 8) {
-            $erros[] = "A senha deve ter pelo menos 8 caracteres!";
-        }
-
-        if ($nova_senha !== $confirmar_senha) {
-            $erros[] = "As senhas não coincidem!";
-        }
+        if (strlen($nova_senha) < 8) $erros[] = "A senha deve ter pelo menos 8 caracteres!";
+        if ($nova_senha !== $confirmar_senha) $erros[] = "As senhas não coincidem!";
 
         if (empty($erros)) {
             $senha_hash = password_hash($nova_senha, PASSWORD_DEFAULT);
-
             try {
                 $stmt = $pdo->prepare("UPDATE usuarios SET senha = ? WHERE numero_loja = ?");
                 if ($stmt->execute([$senha_hash, $_SESSION['recuperacao']['numero_loja']])) {
@@ -94,14 +82,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>Recuperar Senha</title>
-    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="container">
-        <h1>Recuperação de Senha</h1>
+<body class="bg-black text-white min-h-screen flex items-center justify-center px-4">
+    <div class="bg-gray-900 bg-opacity-80 p-8 rounded-2xl shadow-2xl w-full max-w-lg">
+        <h1 class="text-2xl font-bold text-center mb-6">Recuperação de Senha</h1>
 
         <?php if (!empty($erros)): ?>
-            <div class="alert alert-error">
+            <div class="bg-red-600 text-white p-4 rounded mb-4">
                 <?php foreach ($erros as $erro): ?>
                     <p><?= $erro ?></p>
                 <?php endforeach; ?>
@@ -109,47 +97,47 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <?php endif; ?>
 
         <?php if ($sucesso): ?>
-            <div class="alert alert-success"><?= $sucesso ?></div>
+            <div class="bg-green-600 text-white p-4 rounded mb-4"><?= $sucesso ?></div>
         <?php endif; ?>
 
         <?php if ($etapa == 1): ?>
-            <form method="POST">
-                <div class="form-group">
-                    <label>Número da Loja:</label>
-                    <input type="text" name="numero_loja" required>
+            <form method="POST" class="space-y-4">
+                <div>
+                    <label class="block mb-1">Número da Loja:</label>
+                    <input type="text" name="numero_loja" required class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded focus:ring-2 focus:ring-purple-500">
                 </div>
-                <button type="submit" class="btn btn-primary">Continuar</button>
+                <button type="submit" class="w-full py-2 bg-purple-600 hover:bg-purple-700 rounded text-white font-bold">Continuar</button>
             </form>
 
         <?php elseif ($etapa == 2 && isset($_SESSION['recuperacao'])): ?>
-            <form method="POST">
-                <div class="form-group">
-                    <label>Pergunta de Segurança:</label>
-                    <p><strong><?= $_SESSION['recuperacao']['pergunta'] ?></strong></p>
+            <form method="POST" class="space-y-4">
+                <div>
+                    <label class="block mb-1">Pergunta de Segurança:</label>
+                    <p class="font-semibold"><?= $_SESSION['recuperacao']['pergunta'] ?></p>
                 </div>
-                <div class="form-group">
-                    <label>Resposta:</label>
-                    <input type="text" name="resposta" required>
+                <div>
+                    <label class="block mb-1">Resposta:</label>
+                    <input type="text" name="resposta" required class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded focus:ring-2 focus:ring-purple-500">
                 </div>
-                <button type="submit" class="btn btn-primary">Verificar</button>
+                <button type="submit" class="w-full py-2 bg-purple-600 hover:bg-purple-700 rounded text-white font-bold">Verificar</button>
             </form>
 
         <?php elseif ($etapa == 3 && isset($_SESSION['recuperacao'])): ?>
-            <form method="POST">
-                <div class="form-group">
-                    <label>Nova Senha:</label>
-                    <input type="password" name="nova_senha" required>
+            <form method="POST" class="space-y-4">
+                <div>
+                    <label class="block mb-1">Nova Senha:</label>
+                    <input type="password" name="nova_senha" required class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded focus:ring-2 focus:ring-purple-500">
                 </div>
-                <div class="form-group">
-                    <label>Confirmar Nova Senha:</label>
-                    <input type="password" name="confirmar_senha" required>
+                <div>
+                    <label class="block mb-1">Confirmar Nova Senha:</label>
+                    <input type="password" name="confirmar_senha" required class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded focus:ring-2 focus:ring-purple-500">
                 </div>
-                <button type="submit" class="btn btn-primary">Alterar Senha</button>
+                <button type="submit" class="w-full py-2 bg-purple-600 hover:bg-purple-700 rounded text-white font-bold">Alterar Senha</button>
             </form>
         <?php endif; ?>
 
-        <div class="links">
-            <a href="index.php" class="btn btn-secondary">← Voltar para Login</a>
+        <div class="text-center mt-6">
+            <a href="index.php" class="text-purple-300 hover:underline">← Voltar para Login</a>
         </div>
     </div>
 </body>
