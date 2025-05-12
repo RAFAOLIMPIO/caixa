@@ -164,4 +164,3 @@ $funcionarios = $stmt->fetchAll();
     </div>
 </body>
 </html>
-
