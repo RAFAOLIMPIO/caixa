@@ -4,7 +4,7 @@ session_start();
 $host = 'mysql.railway.internal';
 $db   = 'railway';
 $user = 'root';
-$pass = 'OLlAHAXvBKEtBkDkpcpuryBKFcOlwtvhy'; // substitua se a senha mudar
+$pass = 'OlLAHAxVBKtEbKdpcpuryBKFcOlwtvhy'; // substitua se a senha mudar
 $port = 3306;
 
 try {
