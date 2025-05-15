@@ -120,8 +120,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                 senha.type = 'password';
                 icon.classList.replace('fa-eye-slash', 'fa-eye');
             }
-      
-  }
+      }
     </script>
 </body>
 </html>
