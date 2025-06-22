@@ -1,44 +1,72 @@
 <?php
 include 'includes/config.php';
 
-if(isset($_SESSION['usuario'])) {
+if (isset($_SESSION['usuario'])) {
     header("Location: menu.php");
     exit();
 }
 
+// Login automático via cookie "lembrar_token"
+if (isset($_COOKIE['lembrar_token'])) {
+    $token = $_COOKIE['lembrar_token'];
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE lembrar_token = ?");
+        $stmt->execute([$token]);
+        $usuario = $stmt->fetch();
+        if ($usuario) {
+            $_SESSION['usuario'] = [
+                'id' => $usuario['id'],
+                'numero_loja' => $usuario['numero_loja'],
+                'email' => $usuario['email']
+            ];
+            header("Location: menu.php");
+            exit();
+        } else {
+            // Token inválido ou usuário não encontrado, apagar cookie
+            setcookie('lembrar_token', '', time() - 3600, "/");
+        }
+    } catch (PDOException $e) {
+        // Log ou ignore
+    }
+}
+
 $erro = '';
 
-if($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $numero_loja = sanitizar($_POST['numero_loja']);
     $senha = sanitizar($_POST['senha']);
 
-    try {  
-        $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE numero_loja = ?");  
-        $stmt->execute([$numero_loja]);  
-        $usuario = $stmt->fetch();  
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE numero_loja = ?");
+        $stmt->execute([$numero_loja]);
+        $usuario = $stmt->fetch();
 
-        if($usuario && password_verify($senha, $usuario['senha'])) {  
-            $_SESSION['usuario'] = [  
-                'id' => $usuario['id'],  
-                'numero_loja' => $usuario['numero_loja'],  
-                'email' => $usuario['email']  
-            ];  
-            
-            if(isset($_POST['lembrar'])) {  
-                $token = bin2hex(random_bytes(32));  
-                setcookie('lembrar_token', $token, time() + (86400 * 30), "/");  
-                $stmt = $pdo->prepare("UPDATE usuarios SET lembrar_token = ? WHERE id = ?");  
-                $stmt->execute([$token, $usuario['id']]);  
-            }  
-            
-            header("Location: menu.php");  
-            exit();  
-        } else {  
-            $erro = "Credenciais inválidas!";  
-        }  
-        
-    } catch(PDOException $e) {  
-        $erro = "Erro no sistema: " . $e->getMessage();  
+        if ($usuario && password_verify($senha, $usuario['senha'])) {
+            $_SESSION['usuario'] = [
+                'id' => $usuario['id'],
+                'numero_loja' => $usuario['numero_loja'],
+                'email' => $usuario['email']
+            ];
+
+            if (isset($_POST['lembrar'])) {
+                $token = bin2hex(random_bytes(32));
+                setcookie('lembrar_token', $token, time() + (86400 * 30), "/");
+                $stmt = $pdo->prepare("UPDATE usuarios SET lembrar_token = ? WHERE id = ?");
+                $stmt->execute([$token, $usuario['id']]);
+            } else {
+                // Apaga token do banco e cookie caso não queira lembrar
+                $stmt = $pdo->prepare("UPDATE usuarios SET lembrar_token = NULL WHERE id = ?");
+                $stmt->execute([$usuario['id']]);
+                setcookie('lembrar_token', '', time() - 3600, "/");
+            }
+
+            header("Location: menu.php");
+            exit();
+        } else {
+            $erro = "Credenciais inválidas!";
+        }
+    } catch (PDOException $e) {
+        $erro = "Erro no sistema: " . $e->getMessage();
     }
 }
 ?>
