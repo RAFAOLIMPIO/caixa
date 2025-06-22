@@ -111,7 +111,8 @@ try {
                 </thead>
                 <tbody>
                     <?php foreach ($vendas as $venda): ?>
-                        <tr class="border-b border-gray-700 hover:bg-gray-800 <?= $venda['pago'] ? 'bg-green-900' : '' ?>">
+                        <?php $pago = isset($venda['pago']) && $venda['pago'] ? true : false; ?>
+                        <tr class="border-b border-gray-700 hover:bg-gray-800 <?= $pago ? 'bg-green-900' : '' ?>">
                             <td class="p-3"><?= $venda['data_formatada'] ?></td>
                             <td class="p-3">
                                 <span class="relative group cursor-pointer">
@@ -127,7 +128,7 @@ try {
                             <td class="p-3"><?= htmlspecialchars($venda['autozoner_nome']) ?></td>
                             <td class="p-3"><?= htmlspecialchars($venda['motoboy']) ?></td>
                             <td class="p-3 text-center">
-                                <input type="checkbox" onchange="togglePago(<?= $venda['id'] ?>, this.checked)" <?= $venda['pago'] ? 'checked' : '' ?> class="accent-green-500" />
+                                <input type="checkbox" onchange="togglePago(<?= $venda['id'] ?>, this.checked)" <?= $pago ? 'checked' : '' ?> class="accent-green-500" />
                             </td>
                             <td class="p-3 flex space-x-2">
                                 <a href="relatorio.php?action=edit&id=<?= $venda['id'] ?>" class="text-green-400 hover:text-green-300"><i class="fas fa-edit"></i></a>
