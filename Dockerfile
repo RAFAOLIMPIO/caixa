@@ -4,10 +4,9 @@ FROM php:8.2-apache
 RUN apt-get update && apt-get install -y \
     libzip-dev \
     zip \
+    libpq-dev \                # <-- biblioteca cliente do PostgreSQL
     && docker-php-ext-install \
-    mysqli \
-    pdo \
-    pdo_mysql \
+    pdo_pgsql \                # <-- habilita PDO para PostgreSQL
     zip \
     && a2enmod rewrite
 
