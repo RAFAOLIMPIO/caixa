@@ -17,7 +17,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $troco = ($valor_pago > $valor) ? ($valor_pago - $valor) : 0;
     $forma_pagamento = $_POST['forma_pagamento'] ?? '';
     $motoboy = $_POST['motoboy'] ?? '';
+
+    // Tratamento do autozoner_id para evitar string vazia enviada ao banco
     $autozoner_id = $_POST['autozoner_id'] ?? null;
+    if ($autozoner_id === '' || $autozoner_id === null) {
+        $autozoner_id = null;
+    } else {
+        $autozoner_id = (int)$autozoner_id;
+    }
 
     if (!$cliente || !$valor || !$forma_pagamento) {
         $erros[] = "Preencha todos os campos obrigatórios.";
