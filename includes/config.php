@@ -1,24 +1,26 @@
-FROM php:8.2-apache
+<?php
+session_start();
 
-# Instala dependências do sistema e extensões do PHP
-RUN apt-get update && apt-get install -y \
-    libzip-dev \
-    zip \
-    libpq-dev \                # <-- biblioteca cliente do PostgreSQL
-    && docker-php-ext-install \
-    pdo_pgsql \                # <-- habilita PDO para PostgreSQL
-    zip \
-    && a2enmod rewrite
+// Pega dados do banco via variáveis de ambiente (configuradas no painel Render)
+$host = getenv('DB_HOST') ?: 'dpg-d1c3qummcj7s73a60q30-a.oregon-postgres.render.com';
+$port = getenv('DB_PORT') ?: '5432';
+$user = getenv('DB_USER') ?: 'cx7670_user';
+$password = getenv('DB_PASS') ?: 'a7JoRWJCdN6v5dpuIYZVD0fvww2S5n3O';
+$database = getenv('DB_NAME') ?: 'cx7670';
 
-# Copia os arquivos do projeto para o diretório padrão do Apache
-COPY . /var/www/html/
+try {
+    $pdo = new PDO(
+        "pgsql:host=$host;port=$port;dbname=$database",
+        $user,
+        $password
+    );
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+} catch(PDOException $e) {
+    die("Erro na conexão com o banco: " . $e->getMessage());
+}
 
-# Corrige permissões
-RUN chown -R www-data:www-data /var/www/html
-
-# Define o diretório de trabalho
-WORKDIR /var/www/html
-
-# Expondo a porta 80
-EXPOSE 80
-
+// Função para sanitizar dados
+function sanitizar($dado) {
+    return htmlspecialchars(trim($dado), ENT_QUOTES, 'UTF-8');
+}
