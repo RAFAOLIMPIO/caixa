@@ -1,16 +1,16 @@
 <?php
 session_start();
 
-// Conexão com o banco (Railway externo para uso no Render)
-$host = 'yamanote.proxy.rlwy.net'; // Pegue o domínio visível na variável MYSQL_PUBLIC_URL
-$port = 57420; // Pegue da mesma variável
-$user = 'root'; // MYSQLUSER
-$password = 'OlLAHAxVBKtEbKdpcpuryBKFcOlwtvhy'; // MYSQLPASSWORD
-$database = 'railway'; // MYSQLDATABASE
+// Conexão com o banco PostgreSQL no Render
+$host = 'dpg-d1c3qummcj7s73a60q30-a.oregon-postgres.render.com';
+$port = '5432';
+$user = 'cx7670_user';
+$password = 'a7JoRWJCdN6v5dpuIYZVD0fvww2S5n3O';
+$database = 'cx7670';
 
 try {
     $pdo = new PDO(
-        "mysql:host=$host;port=$port;dbname=$database;charset=utf8mb4",
+        "pgsql:host=$host;port=$port;dbname=$database",
         $user,
         $password
     );
