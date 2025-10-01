@@ -2,7 +2,7 @@
 $host = "dpg-d3eq5rumcj7s73dvr4sg-a";
 $port = "5432";
 $dbname = "cx7670";
-$user = "cx7670_xid7_user";
+$user = "cx7670_x1d7_user";
 $password = "uv26wxOj3EqtYfGCp8NJyAOEudNkxdUI";
 
 try {
