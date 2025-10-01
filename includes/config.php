@@ -1,37 +1,15 @@
 <?php
-session_start();
-
-// Pega dados do banco via variáveis de ambiente
-$host = getenv('DB_HOST') ?: 'dpg-d3eq5rumcj7s73dvr4sg-a';
-$port = getenv('DB_PORT') ?: '5432';
-$user = getenv('DB_USER') ?: 'cx7670_x1d7';
-$password = getenv('DB_PASS') ?: 'uv26wxOj3EqtYfGCp8NJyAOEudNkxdUI';
-$database = getenv('DB_NAME') ?: 'cx7670';
+$host = "dpg-d3eq5rumcj7s73dvr4sg-a";
+$port = "5432";
+$dbname = "cx7670_xid7";
+$user = "cx7670_xid7_user";
+$password = "uv26wo3jEqfYt6Q6NbJvAQeUNkdXudI";
 
 try {
-    // Log de tentativa de conexão
-    error_log("Tentando conectar ao banco $host:$port/$database");
-
-    // Força uso de SSL no Render
-    $pdo = new PDO(
-        "pgsql:host=$host;port=$port;dbname=$database;sslmode=require",
-        $user,
-        $password,
-        [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-        ]
-    );
-    // Log de sucesso
-    error_log("Conexão bem-sucedida ao banco");
-
+    $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $user, $password, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+    ]);
 } catch (PDOException $e) {
-    // Log do erro
-    error_log("Erro na conexão com o banco: " . $e->getMessage());
-    die("Erro na conexão com o banco: " . $e->getMessage());
+    die("Erro de conexão: " . $e->getMessage());
 }
-
-// Função para sanitizar dados
-function sanitizar($dado) {
-    return htmlspecialchars(trim($dado), ENT_QUOTES, 'UTF-8');
-}
+?>
