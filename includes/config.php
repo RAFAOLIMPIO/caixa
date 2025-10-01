@@ -3,7 +3,7 @@ $host = "dpg-d3eq5rumcj7s73dvr4sg-a";
 $port = "5432";
 $dbname = "cx7670_xid7";
 $user = "cx7670_xid7_user";
-$password = "uv26wo3jEqfYt6Q6NbJvAQeUNkdXudI";
+$password = "uv26wxOj3EqtYfGCp8NJyAOEudNkxdUI";
 
 try {
     $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $user, $password, [
