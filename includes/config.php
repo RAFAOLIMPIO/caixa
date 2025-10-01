@@ -2,10 +2,10 @@
 session_start();
 
 // Pega dados do banco via variáveis de ambiente
-$host = getenv('DB_HOST') ?: 'dpg-d1c3qummcj7s73a60q30-a.oregon-postgres.render.com';
+$host = getenv('DB_HOST') ?: 'dpg-d3eq5rumcj7s73dvr4sg-a';
 $port = getenv('DB_PORT') ?: '5432';
-$user = getenv('DB_USER') ?: 'cx7670_user';
-$password = getenv('DB_PASS') ?: 'a7JoRWJCdN6v5dpuIYZVD0fvww2S5n3O';
+$user = getenv('DB_USER') ?: 'cx7670_x1d7';
+$password = getenv('DB_PASS') ?: 'uv26wxOj3EqtYfGCp8NJyAOEudNkxdUI';
 $database = getenv('DB_NAME') ?: 'cx7670';
 
 try {
