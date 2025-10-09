@@ -1,11 +1,15 @@
 <?php
 // ATENÇÃO: Deixe o display_errors LIGADO APENAS para desenvolvimento.
-// Desligue ou remova em produção!
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Inclui a configuração e a função sanitizar()
+// Inclui a configuração e a função sanitizar() (que deve estar em includes/config.php)
 include 'includes/config.php'; 
+
+// Inicia a sessão para usar $_SESSION (Garantia de que está funcionando)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Verifica se o usuário já está logado
 if(isset($_SESSION['usuario'])) {
@@ -46,13 +50,9 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                 header("Location: index.php");
                 exit();
             }
-        }catch(PDOException $e) {
-    // ATENÇÃO: ISTO É APENAS PARA DIAGNÓSTICO. Remova depois!
-    $erros[] = "Erro DETALHADO do banco: " . $e->getMessage(); 
-    // MENSAGEM AMIGÁVEL ORIGINAL (Remova a linha acima após o diagnóstico):
-    // $erros[] = "Erro interno ao cadastrar. Tente novamente mais tarde."; 
-}
-            // Em desenvolvimento, você pode adicionar: error_log("Erro no cadastro: " . $e->getMessage());
+        } catch(PDOException $e) {
+            // AGORA VAMOS VER O ERRO DETALHADO!
+            $erros[] = "Erro DETALHADO do banco: " . $e->getMessage(); 
         }
     }
 }
