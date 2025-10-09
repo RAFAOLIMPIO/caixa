@@ -2,7 +2,19 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-include 'includes/config.php';
+// =======================================================
+// ADIÇÃO CRUCIAL: FUNÇÃO DE SEGURANÇA (SANITIZAÇÃO)
+// Esta função resolve o erro fatal "Call to undefined function sanitizar()"
+// =======================================================
+function sanitizar($dado) {
+    if (is_array($dado)) {
+        return array_map('sanitizar', $dado);
+    }
+    // Remove tags HTML, caracteres especiais e espaços desnecessários
+    return trim(filter_var($dado, FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+}
+
+include 'includes/config.php'; // Inclui a configuração do banco ($pdo) e pode incluir outras funções
 
 if(isset($_SESSION['usuario'])) {
     header("Location: menu.php");
@@ -13,6 +25,7 @@ $erros = [];
 $sucesso = '';
 
 if($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Estas linhas agora funcionam perfeitamente
     $numero_loja = sanitizar($_POST['numero_loja']);
     $email = sanitizar($_POST['email']);
     $senha = $_POST['senha'];
@@ -108,5 +121,3 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
     </div>
 </body>
 </html>
-
-
