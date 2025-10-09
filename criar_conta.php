@@ -1,21 +1,13 @@
 <?php
+// ATENÇÃO: Deixe o display_errors LIGADO APENAS para desenvolvimento.
+// Desligue ou remova em produção!
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// =======================================================
-// ADIÇÃO CRUCIAL: FUNÇÃO DE SEGURANÇA (SANITIZAÇÃO)
-// Esta função resolve o erro fatal "Call to undefined function sanitizar()"
-// =======================================================
-function sanitizar($dado) {
-    if (is_array($dado)) {
-        return array_map('sanitizar', $dado);
-    }
-    // Remove tags HTML, caracteres especiais e espaços desnecessários
-    return trim(filter_var($dado, FILTER_SANITIZE_FULL_SPECIAL_CHARS));
-}
+// Inclui a configuração e a função sanitizar()
+include 'includes/config.php'; 
 
-include 'includes/config.php'; // Inclui a configuração do banco ($pdo) e pode incluir outras funções
-
+// Verifica se o usuário já está logado
 if(isset($_SESSION['usuario'])) {
     header("Location: menu.php");
     exit();
@@ -25,33 +17,39 @@ $erros = [];
 $sucesso = '';
 
 if($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Estas linhas agora funcionam perfeitamente
-    $numero_loja = sanitizar($_POST['numero_loja']);
-    $email = sanitizar($_POST['email']);
-    $senha = $_POST['senha'];
-    $confirmar = $_POST['confirmar_senha'];
-    $pergunta = sanitizar($_POST['pergunta']);
-    $resposta = sanitizar($_POST['resposta']);
+    // Sanitize os dados de entrada
+    $numero_loja = sanitizar($_POST['numero_loja'] ?? '');
+    $email = sanitizar($_POST['email'] ?? '');
+    $senha = $_POST['senha'] ?? '';
+    $confirmar = $_POST['confirmar_senha'] ?? '';
+    $pergunta = sanitizar($_POST['pergunta'] ?? '');
+    $resposta = sanitizar($_POST['resposta'] ?? '');
 
+    // Validação da senha
     if(strlen($senha) < 8) {
         $erros[] = "A senha deve ter no mínimo 8 caracteres.";
     } elseif($senha !== $confirmar) {
         $erros[] = "As senhas não coincidem.";
     } else {
         try {
+            // Verifica se o e-mail já existe
             $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE email = ?");
             $stmt->execute([$email]);
             if($stmt->rowCount() > 0) {
                 $erros[] = "E-mail já cadastrado.";
             } else {
+                // Insere o novo usuário
                 $senha_hash = password_hash($senha, PASSWORD_DEFAULT);
                 $stmt = $pdo->prepare("INSERT INTO usuarios (numero_loja, email, senha, pergunta_seguranca, resposta_seguranca) VALUES (?, ?, ?, ?, ?)");
                 $stmt->execute([$numero_loja, $email, $senha_hash, $pergunta, $resposta]);
+                
                 header("Location: index.php");
                 exit();
             }
         } catch(PDOException $e) {
-            $erros[] = "Erro ao cadastrar: " . $e->getMessage();
+            // Mensagem de erro amigável para o cliente (em produção)
+            $erros[] = "Erro interno ao cadastrar. Tente novamente mais tarde."; 
+            // Em desenvolvimento, você pode adicionar: error_log("Erro no cadastro: " . $e->getMessage());
         }
     }
 }
