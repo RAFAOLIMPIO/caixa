@@ -46,9 +46,12 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                 header("Location: index.php");
                 exit();
             }
-        } catch(PDOException $e) {
-            // Mensagem de erro amigável para o cliente (em produção)
-            $erros[] = "Erro interno ao cadastrar. Tente novamente mais tarde."; 
+        }catch(PDOException $e) {
+    // ATENÇÃO: ISTO É APENAS PARA DIAGNÓSTICO. Remova depois!
+    $erros[] = "Erro DETALHADO do banco: " . $e->getMessage(); 
+    // MENSAGEM AMIGÁVEL ORIGINAL (Remova a linha acima após o diagnóstico):
+    // $erros[] = "Erro interno ao cadastrar. Tente novamente mais tarde."; 
+}
             // Em desenvolvimento, você pode adicionar: error_log("Erro no cadastro: " . $e->getMessage());
         }
     }
