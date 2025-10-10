@@ -57,8 +57,9 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                 exit();
             }
         } catch(PDOException $e) {
-            // MENSAGEM AMIGÁVEL AO CLIENTE (FINAL): Oculta o erro detalhado
-            $erros[] = "Erro interno ao cadastrar. Tente novamente mais tarde."; 
+    // ATENÇÃO: ISTO É APENAS PARA DIAGNÓSTICO. 
+    $erros[] = "Erro DETALHADO do banco: " . $e->getMessage(); 
+}
             
             // Log do erro real (apenas para o servidor)
             // error_log("Erro crítico no cadastro: " . $e->getMessage()); 
