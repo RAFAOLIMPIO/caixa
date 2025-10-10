@@ -47,8 +47,9 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $senha_hash = password_hash($senha, PASSWORD_DEFAULT);
                 
                 // CORREÇÃO ESSENCIAL: Uso de AS ASPAS DUPLAS no INSERT (tentativa final)
-                $stmt = $pdo->prepare('INSERT INTO usuarios ("numero_loja", "email", "senha", "pergunta_seguranca", "resposta_seguranca") 
-                                       VALUES (?, ?, ?, ?, ?)');
+               // TENTATIVA B: Assumindo que a coluna tem um nome diferente, como "password"
+$stmt = $pdo->prepare('INSERT INTO usuarios ("numero_loja", "email", "password", "pergunta_seguranca", "resposta_seguranca") 
+                       VALUES (?, ?, ?, ?, ?)');
                                        
                 $stmt->execute([$numero_loja, $email, $senha_hash, $pergunta, $resposta]);
                 
