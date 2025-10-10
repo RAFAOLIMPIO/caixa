@@ -1,37 +1,49 @@
 <?php
 include 'includes/config.php';
+include 'includes/funcoes.php';
 
 if (!isset($_SESSION['usuario']['id'])) {
     header("Location: index.php");
     exit();
 }
 
-$numero_loja = (int)$_SESSION['usuario']['id'];
+$numero_loja = $_SESSION['usuario']['numero_loja'] ?? $_SESSION['usuario']['id'];
 $sucesso = '';
 $erros = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $cliente = htmlspecialchars(trim($_POST['cliente'] ?? ''));
-    $valor = (float)str_replace([',', 'R$'], ['.', ''], $_POST['valor'] ?? 0);
-    $valor_pago = (float)str_replace([',', 'R$'], ['.', ''], $_POST['valor_pago'] ?? 0);
+    $cliente = sanitizar($_POST['cliente'] ?? '');
+    $valor = floatval(str_replace([',','R$',' '], ['.','',''], $_POST['valor'] ?? 0));
+    $valor_pago = floatval(str_replace([',','R$',' '], ['.','',''], $_POST['valor_pago'] ?? 0));
     $troco = ($valor_pago > $valor) ? ($valor_pago - $valor) : 0;
-    $forma_pagamento = $_POST['forma_pagamento'] ?? '';
-    $motoboy = $_POST['motoboy'] ?? '';
-
-    // Tratamento do autozoner_id para evitar string vazia enviada ao banco
+    $forma_pagamento = sanitizar($_POST['forma_pagamento'] ?? '');
+    $motoboy = sanitizar($_POST['motoboy'] ?? '');
+    $obs = sanitizar($_POST['obs'] ?? '');
     $autozoner_id = $_POST['autozoner_id'] ?? null;
-    if ($autozoner_id === '' || $autozoner_id === null) {
-        $autozoner_id = null;
-    } else {
-        $autozoner_id = (int)$autozoner_id;
-    }
 
-    if (!$cliente || !$valor || !$forma_pagamento) {
-        $erros[] = "Preencha todos os campos obrigatórios.";
-    } else {
+    // Autozoner obrigatório conforme solicitado
+    $erros = array_merge($erros, validar_campos_obrigatorios(['autozoner_id' => 'Campo Autozoner é obrigatório.'], ['autozoner_id' => 'Campo Autozoner é obrigatório.']));
+
+    if (!$cliente) $erros[] = "Cliente é obrigatório.";
+    if (!$valor || $valor <= 0) $erros[] = "Valor inválido.";
+
+    if (count($erros) === 0) {
         try {
-            $stmt = $pdo->prepare("INSERT INTO vendas (cliente, valor, valor_pago, troco, forma_pagamento, motoboy, numero_loja, autozoner_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$cliente, $valor, $valor_pago, $troco, $forma_pagamento, $motoboy, $numero_loja, $autozoner_id]);
+            $sql = "INSERT INTO vendas (cliente, valor, valor_pago, troco, forma_pagamento, motoboy, pago, numero_loja, autozoner_id, obs) 
+                    VALUES (:cliente, :valor, :valor_pago, :troco, :forma_pagamento, :motoboy, :pago, :numero_loja, :autozoner_id, :obs)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                ':cliente' => $cliente,
+                ':valor' => $valor,
+                ':valor_pago' => $valor_pago > 0 ? $valor_pago : null,
+                ':troco' => $troco,
+                ':forma_pagamento' => $forma_pagamento,
+                ':motoboy' => $motoboy,
+                ':pago' => 0,
+                ':numero_loja' => $numero_loja,
+                ':autozoner_id' => $autozoner_id ?: null,
+                ':obs' => $obs
+            ]);
             $sucesso = "Venda registrada com sucesso.";
         } catch (PDOException $e) {
             $erros[] = "Erro ao salvar: " . $e->getMessage();
@@ -39,119 +51,88 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$stmtAutozoners = $pdo->prepare("SELECT * FROM funcionarios WHERE tipo = 'autozoner' AND numero_loja = ?");
-$stmtAutozoners->execute([$numero_loja]);
-$autozoners = $stmtAutozoners->fetchAll();
+// Busca autozoners (lista de funcionarios) - se não houver coluna 'cargo', pega todos
+try {
+    $stmtAuto = $pdo->prepare("SELECT id, nome, cargo FROM funcionarios WHERE numero_loja = ? OR numero_loja IS NULL");
+    $stmtAuto->execute([$numero_loja]);
+    $autozoners = $stmtAuto->fetchAll();
+} catch (Exception $e) {
+    $autozoners = [];
+}
 
-$stmtMotoboys = $pdo->prepare("SELECT * FROM funcionarios WHERE tipo = 'motoboy' AND numero_loja = ?");
-$stmtMotoboys->execute([$numero_loja]);
-$motoboys = $stmtMotoboys->fetchAll();
+// renderiza página (simples)
 ?>
-<!DOCTYPE html>
-<html lang="pt-br">
+<!doctype html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Controle de Caixa</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<meta charset="utf-8">
+<title>Caixa - Registrar Venda</title>
+<script src="js/scripts.js"></script>
+<link rel="stylesheet" href="https://cdn.tailwindcss.com">
 </head>
-<body class="bg-black text-white min-h-screen p-4">
-    <div class="max-w-xl mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold"><i class="fas fa-cash-register mr-2"></i>Controle de Caixa</h1>
-            <a href="menu.php" class="text-sm text-purple-400 hover:underline"><i class="fas fa-arrow-left"></i> Voltar</a>
+<body class="bg-gray-900 text-white p-6">
+<div class="max-w-2xl mx-auto">
+    <h1 class="text-2xl font-bold mb-4">Registrar Venda</h1>
+    <?php if ($sucesso): ?>
+        <div class="bg-green-600 p-3 rounded mb-4"><?=htmlspecialchars($sucesso)?></div>
+    <?php endif; ?>
+    <?php if ($erros): ?>
+        <div class="bg-red-600 p-3 rounded mb-4">
+            <?php foreach ($erros as $err) echo htmlspecialchars($err)."<br>"; ?>
         </div>
+    <?php endif; ?>
 
-        <?php if (!empty($erros)): ?>
-            <div class="bg-red-600 p-3 rounded mb-4">
-                <?= implode('<br>', array_map('htmlspecialchars', $erros)) ?>
-            </div>
-        <?php endif; ?>
-        <?php if ($sucesso): ?>
-            <div class="bg-green-600 p-3 rounded mb-4"><?= htmlspecialchars($sucesso) ?></div>
-        <?php endif; ?>
-
-        <form method="POST" class="space-y-4 bg-gray-900 p-6 rounded-xl">
-            <div>
-                <label>Cliente</label>
-                <input type="text" name="cliente" required class="w-full p-2 bg-gray-800 border border-gray-700 rounded">
-            </div>
-            <div>
-                <label>Valor</label>
-                <input type="text" name="valor" id="valor" required class="w-full p-2 bg-gray-800 border border-gray-700 rounded">
-            </div>
-            <div id="pagamento-dinheiro" class="hidden">
-                <label>Valor Pago</label>
-                <input type="text" name="valor_pago" id="valor_pago" class="w-full p-2 bg-gray-800 border border-gray-700 rounded">
-                <label>Troco</label>
-                <input type="text" name="troco" id="troco" readonly class="w-full p-2 bg-gray-800 border border-gray-700 rounded">
-            </div>
-            <div>
-                <label>Forma de Pagamento</label>
-                <select name="forma_pagamento" id="forma_pagamento" class="w-full p-2 bg-gray-800 border border-gray-700 rounded" required>
-                    <option value="pix">PIX</option>
-                    <option value="credito">Crédito</option>
-                    <option value="debito">Débito</option>
-                    <option value="dinheiro">Dinheiro</option>
-                </select>
-            </div>
-            <div>
-                <label>Motoboy</label>
-                <select name="motoboy" class="w-full p-2 bg-gray-800 border border-gray-700 rounded">
-                    <option value="">Não informado</option>
-                    <?php foreach ($motoboys as $m): ?>
-                        <option value="<?= htmlspecialchars($m['nome']) ?>"><?= htmlspecialchars($m['nome']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div>
-                <label>Autozoner</label>
-                <select name="autozoner_id" class="w-full p-2 bg-gray-800 border border-gray-700 rounded">
-                    <option value="">Não informado</option>
-                    <?php foreach ($autozoners as $a): ?>
-                        <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nome']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <button type="submit" class="w-full py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded font-bold text-white">
-                <i class="fas fa-save mr-2"></i>Salvar
-            </button>
-        </form>
-    </div>
-
-    <script>
-        const formatarMoeda = (campo) => {
-            campo.addEventListener('input', () => {
-                let valor = campo.value.replace(/\D/g, '');
-                valor = (valor / 100).toFixed(2) + '';
-                valor = valor.replace('.', ',');
-                valor = 'R$ ' + valor;
-                campo.value = valor;
-            });
-        }
-
-        const calcularTroco = () => {
-            const valor = parseFloat(document.getElementById('valor').value.replace(/[^0-9,]/g, '').replace(',', '.') || 0);
-            const pago = parseFloat(document.getElementById('valor_pago').value.replace(/[^0-9,]/g, '').replace(',', '.') || 0);
-            const troco = pago - valor;
-            document.getElementById('troco').value = 'R$ ' + troco.toFixed(2).replace('.', ',');
-        };
-
-        document.getElementById('forma_pagamento').addEventListener('change', function () {
-            const dinheiroDiv = document.getElementById('pagamento-dinheiro');
-            if (this.value === 'dinheiro') {
-                dinheiroDiv.classList.remove('hidden');
-            } else {
-                dinheiroDiv.classList.add('hidden');
-                document.getElementById('valor_pago').value = '';
-                document.getElementById('troco').value = '';
-            }
-        });
-
-        formatarMoeda(document.getElementById('valor'));
-        formatarMoeda(document.getElementById('valor_pago'));
-        document.getElementById('valor_pago').addEventListener('input', calcularTroco);
-    </script>
+    <form method="post" class="space-y-4 bg-gray-800 p-4 rounded">
+        <div>
+            <label class="block text-sm">Cliente</label>
+            <input name="cliente" required class="w-full p-2 bg-gray-700 rounded" />
+        </div>
+        <div>
+            <label class="block text-sm">Valor</label>
+            <input name="valor" required class="w-full p-2 bg-gray-700 rounded" />
+        </div>
+        <div>
+            <label class="block text-sm">Valor Pago (opcional)</label>
+            <input name="valor_pago" class="w-full p-2 bg-gray-700 rounded" />
+        </div>
+        <div>
+            <label class="block text-sm">Forma Pagamento</label>
+            <select name="forma_pagamento" class="w-full p-2 bg-gray-700 rounded">
+                <option value="">Selecione</option>
+                <option>Dinheiro</option>
+                <option>Cartão</option>
+                <option>Pix</option>
+                <option>Transferência</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm">Motoboy</label>
+            <select name="motoboy" class="w-full p-2 bg-gray-700 rounded">
+                <option value="">Selecione</option>
+                <option>Uber</option>
+                <option>Balcão</option>
+                <option>Motoboy A</option>
+                <option>Motoboy B</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm">Autozoner (obrigatório)</label>
+            <select name="autozoner_id" class="w-full p-2 bg-gray-700 rounded" required>
+                <option value="">Selecione Autozoner</option>
+                <?php foreach ($autozoners as $a): ?>
+                    <option value="<?=htmlspecialchars($a['id'])?>"><?=htmlspecialchars($a['nome'] . ($a['cargo'] ? " ({$a['cargo']})" : ""))?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm">Observação (obs)</label>
+            <textarea name="obs" class="w-full p-2 bg-gray-700 rounded"></textarea>
+        </div>
+        <div class="flex gap-2">
+            <button class="bg-blue-600 px-4 py-2 rounded">Salvar</button>
+            <a href="relatorio.php" class="bg-gray-600 px-4 py-2 rounded">Relatório</a>
+        </div>
+    </form>
+</div>
 </body>
 </html>
