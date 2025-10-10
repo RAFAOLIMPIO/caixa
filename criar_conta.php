@@ -1,6 +1,5 @@
 <?php
 // ATENÇÃO: Deixe o display_errors LIGADO APENAS para desenvolvimento.
-// REMOVA/COMENTE AS DUAS LINHAS ABAIXO AO COLOCAR O SITE EM PRODUÇÃO!
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -36,18 +35,18 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
     } elseif($senha !== $confirmar) {
         $erros[] = "As senhas não coincidem.";
     } else {
+        // Bloco ELSE para senhas válidas
         try {
             // Verifica se o e-mail já existe
             $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE email = ?");
             $stmt->execute([$email]);
             if($stmt->rowCount() > 0) {
                 $erros[] = "E-mail já cadastrado.";
-           
             } else {
                 // Insere o novo usuário
                 $senha_hash = password_hash($senha, PASSWORD_DEFAULT);
                 
-                // TENTATIVA FINAL: Assumindo que o nome da coluna é 'password' (minúsculo, sem aspas duplas)
+                // QUERY DE TESTE: Usando 'password' sem aspas duplas (Tentativa Final)
                 $stmt = $pdo->prepare('INSERT INTO usuarios (numero_loja, email, password, pergunta_seguranca, resposta_seguranca) 
                                        VALUES (?, ?, ?, ?, ?)');
                                        
@@ -56,13 +55,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                 header("Location: index.php");
                 exit();
             }
-// ...
-            }
         } catch(PDOException $e) {
             // AGORA VAMOS VER O ERRO DETALHADO!
             $erros[] = "Erro DETALHADO do banco: " . $e->getMessage(); 
-        } // A CHAVE DE FECHAMENTO AQUI FOI CORRIGIDA.
-    }
+        } // Fim do bloco 'else' (senhas válidas)
+    } // Fim do bloco 'if($_SERVER['REQUEST_METHOD'] == 'POST')'
 }
 ?>
 <!DOCTYPE html>
