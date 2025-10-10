@@ -1,12 +1,13 @@
 <?php
 // ATENÇÃO: Deixe o display_errors LIGADO APENAS para desenvolvimento.
+// REMOVA/COMENTE AS DUAS LINHAS ABAIXO AO COLOCAR O SITE EM PRODUÇÃO!
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // Inclui a configuração e a função sanitizar() (que deve estar em includes/config.php)
 include 'includes/config.php'; 
 
-// Inicia a sessão para usar $_SESSION (Garantia de que está funcionando)
+// Inicia a sessão para usar $_SESSION
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -44,15 +45,23 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
             } else {
                 // Insere o novo usuário
                 $senha_hash = password_hash($senha, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare("INSERT INTO usuarios (numero_loja, email, senha, pergunta_seguranca, resposta_seguranca) VALUES (?, ?, ?, ?, ?)");
+                
+                // CORREÇÃO ESSENCIAL: Uso de AS ASPAS DUPLAS no INSERT para evitar 
+                // o erro 'Undefined column' do PostgreSQL.
+                $stmt = $pdo->prepare('INSERT INTO usuarios ("numero_loja", "email", "senha", "pergunta_seguranca", "resposta_seguranca") 
+                                       VALUES (?, ?, ?, ?, ?)');
+                                       
                 $stmt->execute([$numero_loja, $email, $senha_hash, $pergunta, $resposta]);
                 
                 header("Location: index.php");
                 exit();
             }
         } catch(PDOException $e) {
-            // AGORA VAMOS VER O ERRO DETALHADO!
-            $erros[] = "Erro DETALHADO do banco: " . $e->getMessage(); 
+            // MENSAGEM AMIGÁVEL AO CLIENTE (FINAL): Oculta o erro detalhado
+            $erros[] = "Erro interno ao cadastrar. Tente novamente mais tarde."; 
+            
+            // Log do erro real (apenas para o servidor)
+            // error_log("Erro crítico no cadastro: " . $e->getMessage()); 
         }
     }
 }
