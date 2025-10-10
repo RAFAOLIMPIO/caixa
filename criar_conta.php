@@ -42,19 +42,21 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt->execute([$email]);
             if($stmt->rowCount() > 0) {
                 $erros[] = "E-mail já cadastrado.";
+           
             } else {
                 // Insere o novo usuário
                 $senha_hash = password_hash($senha, PASSWORD_DEFAULT);
                 
-                // CORREÇÃO ESSENCIAL: Uso de AS ASPAS DUPLAS no INSERT (tentativa final)
-               // TENTATIVA B: Assumindo que a coluna tem um nome diferente, como "password"
-$stmt = $pdo->prepare('INSERT INTO usuarios ("numero_loja", "email", "password", "pergunta_seguranca", "resposta_seguranca") 
-                       VALUES (?, ?, ?, ?, ?)');
+                // TENTATIVA FINAL: Assumindo que o nome da coluna é 'password' (minúsculo, sem aspas duplas)
+                $stmt = $pdo->prepare('INSERT INTO usuarios (numero_loja, email, password, pergunta_seguranca, resposta_seguranca) 
+                                       VALUES (?, ?, ?, ?, ?)');
                                        
                 $stmt->execute([$numero_loja, $email, $senha_hash, $pergunta, $resposta]);
                 
                 header("Location: index.php");
                 exit();
+            }
+// ...
             }
         } catch(PDOException $e) {
             // AGORA VAMOS VER O ERRO DETALHADO!
