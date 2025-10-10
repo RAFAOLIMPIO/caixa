@@ -46,8 +46,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // Insere o novo usuário
                 $senha_hash = password_hash($senha, PASSWORD_DEFAULT);
                 
-                // CORREÇÃO ESSENCIAL: Uso de AS ASPAS DUPLAS no INSERT para evitar 
-                // o erro 'Undefined column' do PostgreSQL.
+                // CORREÇÃO ESSENCIAL: Uso de AS ASPAS DUPLAS no INSERT (tentativa final)
                 $stmt = $pdo->prepare('INSERT INTO usuarios ("numero_loja", "email", "senha", "pergunta_seguranca", "resposta_seguranca") 
                                        VALUES (?, ?, ?, ?, ?)');
                                        
@@ -57,13 +56,9 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                 exit();
             }
         } catch(PDOException $e) {
-    // ATENÇÃO: ISTO É APENAS PARA DIAGNÓSTICO. 
-    $erros[] = "Erro DETALHADO do banco: " . $e->getMessage(); 
-}
-            
-            // Log do erro real (apenas para o servidor)
-            // error_log("Erro crítico no cadastro: " . $e->getMessage()); 
-        }
+            // AGORA VAMOS VER O ERRO DETALHADO!
+            $erros[] = "Erro DETALHADO do banco: " . $e->getMessage(); 
+        } // A CHAVE DE FECHAMENTO AQUI FOI CORRIGIDA.
     }
 }
 ?>
