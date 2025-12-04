@@ -17,12 +17,14 @@ try {
         DB_PASS,
         [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_TIMEOUT => 10
         ]
     );
 } catch (PDOException $e) {
     error_log('Erro de conexão: ' . $e->getMessage());
-    die("<div style='background:red;color:white;padding:10px;text-align:center'>
-        ⚠️ Erro de conexão com o banco de dados.<br>Mensagem: {$e->getMessage()}
+    die("<div style='background:#b91c1c;color:white;padding:15px;font-family:sans-serif'>
+        <b>❌ Erro de conexão com o banco de dados:</b><br>
+        " . htmlspecialchars($e->getMessage()) . "
     </div>");
 }
