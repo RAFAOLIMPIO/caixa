@@ -1,18 +1,21 @@
 <?php
-session_start();
+// includes/config.php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 ob_start();
 
-// Configurações de banco de dados - Render PostgreSQL
+// Configurações do banco Render PostgreSQL
 define('DB_HOST', 'dpg-d1c3qummcj7s73a60q30-a.oregon-postgres.render.com');
+define('DB_PORT', '5432');
 define('DB_NAME', 'cx7670');
 define('DB_USER', 'cx7670_user');
 define('DB_PASS', 'a7JoRWJCdN6v5dpuIYZVD0fvww2S5n3O');
-define('DB_PORT', '5432');
 
-// Conexão PDO com SSL habilitado
+// Tentativa de conexão segura via SSL
 try {
     $pdo = new PDO(
-        "pgsql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";sslmode=require",
+        "pgsql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";sslmode=require;sslrootcert=/etc/ssl/certs/ca-certificates.crt",
         DB_USER,
         DB_PASS,
         [
