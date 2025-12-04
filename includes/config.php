@@ -9,7 +9,7 @@ FROM php:8.2-apache
 ENV TZ=America/Sao_Paulo
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Instalar dependências e certificados SSL
+# Atualizar e instalar dependências do sistema
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     libpng-dev \
@@ -18,10 +18,14 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libonig-dev \
     zip unzip curl \
-    ca-certificates \
-    && update-ca-certificates \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd mbstring zip pdo pdo_pgsql pgsql opcache
+    ca-certificates
+
+# Atualizar certificados SSL
+RUN update-ca-certificates
+
+# Configurar e instalar extensões PHP
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
+RUN docker-php-ext-install gd mbstring zip pdo pdo_pgsql pgsql opcache
 
 # Habilitar módulos necessários do Apache
 RUN a2enmod rewrite headers expires
