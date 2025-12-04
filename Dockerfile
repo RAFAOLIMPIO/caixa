@@ -1,22 +1,45 @@
-# Usa imagem PHP com Apache
-FROM php:8.1-apache
+# ===========================================
+# AUTO GEST - PHP 8.2 + Apache + PostgreSQL
+# Deploy compatível com Render.com
+# ===========================================
 
-# Atualiza pacotes e instala dependências do PostgreSQL
-RUN apt-get update && apt-get install -y libpq-dev \
-    && docker-php-ext-install pdo pdo_pgsql
+FROM php:8.2-apache
 
-# Copia todos os arquivos do projeto para o diretório padrão do Apache
-COPY . /var/www/html/
+# Definir timezone do sistema
+ENV TZ=America/Sao_Paulo
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Corrige permissões (opcional mas recomendado)
-RUN chown -R www-data:www-data /var/www/html
-
-# Habilita regravação de URLs (caso queira usar .htaccess no futuro)
-RUN a2enmod rewrite
-
-EXPOSE 80
-CMD ["apache2-foreground"]
+# Atualizar pacotes e instalar dependências necessárias
 RUN apt-get update && apt-get install -y \
     libpq-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    zip unzip curl \
     ca-certificates \
-    && update-ca-certificates
+    && update-ca-certificates \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd mbstring zip pdo pdo_pgsql pgsql opcache
+
+# Habilitar módulos do Apache
+RUN a2enmod rewrite headers expires
+
+# Copiar arquivos do projeto para o contêiner
+COPY . /var/www/html/
+
+# Garantir permissões corretas
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
+
+# Configurar PHP para produção
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
+# Ajustar diretório de trabalho
+WORKDIR /var/www/html
+
+# Expor porta padrão
+EXPOSE 80
+
+# Comando padrão
+CMD ["apache2-foreground"]
