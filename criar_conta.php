@@ -3,8 +3,8 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Inclui a configuração e a função sanitizar() (que deve estar em includes/config.php)
-include 'includes/config.php'; 
+// Corrigido: garante o caminho absoluto até o config.php
+require_once __DIR__ . '/includes/config.php';
 
 // Inicia a sessão para usar $_SESSION
 if (session_status() === PHP_SESSION_NONE) {
