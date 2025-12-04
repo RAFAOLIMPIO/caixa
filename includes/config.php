@@ -6,7 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 ob_start();
 
 // Configurações do banco Render PostgreSQL
-define('DB_HOST', 'dpg-d1c3qummcj7s73a60q30-a.oregon-postgres.render.com');
+define('DB_HOST', 'dpg-d4no0k24d50c739ok92g-a');
 define('DB_PORT', '5432');
 define('DB_NAME', 'cx7670');
 define('DB_USER', 'cx7670_user');
