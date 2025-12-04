@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && update-ca-certificates \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd mbstring zip pdo_pgsql pgsql opcache
+    && docker-php-ext-install gd mbstring zip pdo pdo_pgsql pgsql opcache
 
 # Habilitar módulos necessários do Apache
 RUN a2enmod rewrite headers expires
