@@ -1,50 +1,28 @@
-# ===========================================
-# AUTO GEST - PHP 8.2 + Apache + PostgreSQL
-# Deploy compatível com Render.com
-# ===========================================
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+ob_start();
 
-FROM php:8.2-apache
+define('DB_HOST', 'dpg-d4no0k24d50c739ok92g-a');
+define('DB_PORT', '5432');
+define('DB_NAME', 'banco7670_4bf6');
+define('DB_USER', 'banco7670_4bf6_user');
+define('DB_PASS', 'lu9ziOuXCSFAh3j8au0S8O5lqwz6b1kP');
 
-# Definir timezone
-ENV TZ=America/Sao_Paulo
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-# Atualizar e instalar dependências do sistema
-RUN apt-get update && apt-get install -y \
-    libpq-dev \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    libzip-dev \
-    libonig-dev \
-    zip unzip curl \
-    ca-certificates
-
-# Atualizar certificados SSL
-RUN update-ca-certificates
-
-# Configurar e instalar extensões PHP
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg
-RUN docker-php-ext-install gd mbstring zip pdo pdo_pgsql pgsql opcache
-
-# Habilitar módulos necessários do Apache
-RUN a2enmod rewrite headers expires
-
-# Copiar os arquivos do projeto
-COPY . /var/www/html/
-
-# Corrigir permissões
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
-
-# Usar configurações PHP de produção
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
-
-# Definir diretório de trabalho
-WORKDIR /var/www/html
-
-# Expor a porta padrão
-EXPOSE 80
-
-# Comando padrão
-CMD ["apache2-foreground"]
+try {
+    $pdo = new PDO(
+        "pgsql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";sslmode=require",
+        DB_USER,
+        DB_PASS,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+        ]
+    );
+} catch (PDOException $e) {
+    error_log('Erro de conexão: ' . $e->getMessage());
+    die("<div style='background:red;color:white;padding:10px;text-align:center'>
+        ⚠️ Erro de conexão com o banco de dados.<br>Mensagem: {$e->getMessage()}
+    </div>");
+}
