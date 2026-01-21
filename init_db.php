@@ -1,15 +1,20 @@
 <?php
-$url = parse_url(getenv("DATABASE_URL"));
+$databaseUrl = getenv("DATABASE_URL");
 
-if (!$url) {
-    die("DATABASE_URL não encontrada");
+if (!$databaseUrl) {
+    die("❌ DATABASE_URL não encontrada");
 }
 
-$host = $url["host"];
-$port = $url["port"];
-$dbname = ltrim($url["path"], "/");
-$user = $url["user"];
-$pass = $url["pass"];
+// Remove parâmetros extras (?sslmode=...)
+$databaseUrl = explode('?', $databaseUrl)[0];
+
+$url = parse_url($databaseUrl);
+
+$host = $url['host'];
+$port = $url['port'] ?? 5432;
+$dbname = ltrim($url['path'], '/');
+$user = $url['user'];
+$pass = $url['pass'];
 
 try {
     $pdo = new PDO(
@@ -28,7 +33,7 @@ try {
         );
     ");
 
-    echo "✅ Conectado ao PostgreSQL e tabela criada!";
+    echo "✅ Conectado ao PostgreSQL do Render com sucesso!";
 } catch (Throwable $e) {
     echo "❌ Erro: " . $e->getMessage();
 }
