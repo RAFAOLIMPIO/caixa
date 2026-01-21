@@ -1,11 +1,14 @@
 <?php
-$databaseUrl = getenv("DATABASE_URL");
+$databaseUrl =
+    $_SERVER['DATABASE_URL']
+    ?? $_ENV['DATABASE_URL']
+    ?? null;
 
 if (!$databaseUrl) {
-    die("❌ DATABASE_URL não encontrada");
+    die("❌ DATABASE_URL não encontrada (Render ainda não injetou)");
 }
 
-// Remove parâmetros extras (?sslmode=...)
+// remove ?sslmode=require se existir
 $databaseUrl = explode('?', $databaseUrl)[0];
 
 $url = parse_url($databaseUrl);
@@ -33,7 +36,7 @@ try {
         );
     ");
 
-    echo "✅ Conectado ao PostgreSQL do Render com sucesso!";
+    echo "✅ CONECTADO AO POSTGRESQL DO RENDER COM SUCESSO!";
 } catch (Throwable $e) {
     echo "❌ Erro: " . $e->getMessage();
 }
