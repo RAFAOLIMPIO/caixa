@@ -1,6 +1,10 @@
 <?php
 $url = parse_url(getenv("DATABASE_URL"));
 
+if (!$url) {
+    die("DATABASE_URL não encontrada");
+}
+
 $host = $url["host"];
 $port = $url["port"];
 $dbname = ltrim($url["path"], "/");
@@ -24,7 +28,7 @@ try {
         );
     ");
 
-    echo "✅ Conectou no banco e criou tabela de teste!";
-} catch (Exception $e) {
+    echo "✅ Conectado ao PostgreSQL e tabela criada!";
+} catch (Throwable $e) {
     echo "❌ Erro: " . $e->getMessage();
 }
