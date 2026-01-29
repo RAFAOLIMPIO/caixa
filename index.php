@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body class="login-bg min-h-screen flex items-center justify-center px-4">
     <div class="glass-effect rounded-2xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row shadow-2xl fade-in">
         <!-- Lado da imagem -->
-        <div class="hidden md:block md:w-1/2 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=800&q=80');">
+        <div class="hidden md:block md:w-1/2 bg-cover bg-center" style="background-image: url('login.jpeg');">
             <div class="h-full bg-black bg-opacity-50 flex items-center justify-center p-8">
                 <div class="text-center text-white">
                     <h1 class="text-4xl font-bold mb-4 gradient-text">AutoGest</h1>
