@@ -14,8 +14,16 @@ $erros = [];
 // Buscar autozoners e motoboys
 try {
     // Autozoners
-    $stmtAuto = $pdo->prepare("SELECT id, nome FROM funcionarios WHERE usuario_id = ? AND tipo = 'autozoner' AND ativo = TRUE ORDER BY nome");
-    $stmtAuto->execute([$usuario_id]);
+    $stmtAuto = $pdo->prepare("
+    SELECT id, nome 
+    FROM funcionarios 
+    WHERE numero_loja = ?
+      AND LOWER(tipo) = 'autozoner'
+      AND ativo = TRUE
+    ORDER BY nome
+");
+$stmtAuto->execute([$numero_loja]);
+
     $autozoners = $stmtAuto->fetchAll();
     
     // Motoboys
