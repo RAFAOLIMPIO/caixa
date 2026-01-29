@@ -226,10 +226,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <label class="block text-white text-sm font-medium mb-2 required-field">
                                 <i class="fas fa-dollar-sign mr-2"></i>Valor da Venda
                             </label>
-                            <input type="text" name="valor" id="valor" value="<?= htmlspecialchars($_POST['valor'] ?? '') ?>" required
-                                class="input-modern" placeholder="0,00"
-                                oninput="formatarMoeda(this); calcularTroco()"
-                                autocomplete="off">
+                           <input
+    type="text"
+    name="valor"
+    id="valor"
+    class="input-modern"
+    placeholder="0,00"
+    oninput="formatarMoeda(this); calcularTroco()"
+    onblur="autoCompletarCentavos(this); calcularTroco()"
+    autocomplete="off">
+
                         </div>
 
                         <!-- Forma de Pagamento -->
@@ -259,11 +265,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <label class="block text-white text-sm font-medium mb-2">
                                     <i class="fas fa-money-bill-wave mr-2"></i>Valor Pago
                                 </label>
-                                <input type="text" name="valor_pago" id="valor_pago" 
-                                    class="input-modern" placeholder="0,00"
-                                    oninput="formatarMoeda(this); calcularTroco()"
-                                    autocomplete="off">
-                            </div>
+                                <input
+    type="text"
+    name="valor_pago"
+    id="valor_pago"
+    class="input-modern"
+    placeholder="0,00"
+    oninput="formatarMoeda(this); calcularTroco()"
+    onblur="autoCompletarCentavos(this); calcularTroco()"
+    autocomplete="off">
+    </div>
 
                             <!-- Troco -->
                             <div>
@@ -369,31 +380,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script>
         // Função para formatar moeda
-     <script>
+<script>
 function formatarMoeda(input) {
-    let valor = input.value;
+    let valor = input.value.replace(/\D/g, '');
 
-    // Remove tudo que não for número ou vírgula
-    valor = valor.replace(/[^0-9,]/g, '');
-
-    // Impede mais de uma vírgula
-    const partes = valor.split(',');
-    if (partes.length > 2) {
-        valor = partes[0] + ',' + partes.slice(1).join('');
+    if (valor === '') {
+        input.value = '';
+        return;
     }
 
-    let inteiro = partes[0];
-    let decimal = partes[1] ?? '';
+    while (valor.length < 3) {
+        valor = '0' + valor;
+    }
 
-    // Limita casas decimais a 2
-    decimal = decimal.substring(0, 2);
+    const reais = valor.slice(0, -2);
+    const centavos = valor.slice(-2);
 
-    // Formata milhar
-    inteiro = inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    input.value =
+        reais.replace(/\B(?=(\d{3})+(?!\d))/g, '.') +
+        ',' +
+        centavos;
+}
 
-    input.value = decimal.length > 0
-        ? `${inteiro},${decimal}`
-        : inteiro;
+function autoCompletarCentavos(input) {
+    if (!input.value) return;
+
+    if (!input.value.includes(',')) {
+        input.value += ',00';
+        return;
+    }
+
+    const partes = input.value.split(',');
+
+    if (partes[1].length === 0) {
+        input.value = partes[0] + ',00';
+    } else if (partes[1].length === 1) {
+        input.value = partes[0] + ',' + partes[1] + '0';
+    }
 }
 </script>
 
