@@ -10,8 +10,8 @@ if (isset($_SESSION['usuario'])) {
 }
 
 // Login automático via cookie - MOVER PARA DEPOIS da verificação de sessão
-if (isset($_COOKIE['lembrar_token'])) {
-    $token = $_COOKIE['lembrar_token'];
+if (isset($_COOKIE['remember_token'])) {
+    $token = $_COOKIE['remember_token'];
     try {
         $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE lembrar_token = ?");
         $stmt->execute([$token]);
@@ -25,7 +25,7 @@ if (isset($_COOKIE['lembrar_token'])) {
             header("Location: menu.php");
             exit();
         } else {
-            setcookie('lembrar_token', '', time() - 3600, "/");
+            setcookie('remember_token', '', time() - 3600, "/");
         }
     } catch (PDOException $e) {
         error_log("Erro login automático: " . $e->getMessage());
@@ -44,17 +44,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $usuario = $stmt->fetch();
 
         if ($usuario && password_verify($senha, $usuario['senha'])) {
+            // após validar número da loja e senha corretamente
             $_SESSION['usuario'] = [
                 'id' => $usuario['id'],
                 'numero_loja' => $usuario['numero_loja'],
                 'email' => $usuario['email']
             ];
 
-            if (isset($_POST['lembrar'])) {
+            // SE marcou "Lembrar minha conta"
+            if (!empty($_POST['remember'])) {
                 $token = bin2hex(random_bytes(32));
-                setcookie('lembrar_token', $token, time() + (86400 * 30), "/");
-                $stmt = $pdo->prepare("UPDATE usuarios SET lembrar_token = ? WHERE id = ?");
-                $stmt->execute([$token, $usuario['id']]);
+                $expira = date('Y-m-d H:i:s', strtotime('+7 days'));
+
+                $stmt = $pdo->prepare("
+                    UPDATE usuarios 
+                    SET remember_token = :token, remember_expires = :expira
+                    WHERE id = :id
+                ");
+                $stmt->execute([
+                    ':token' => password_hash($token, PASSWORD_DEFAULT),
+                    ':expira' => $expira,
+                    ':id' => $usuario['id']
+                ]);
+
+                setcookie(
+                    'remember_token',
+                    $token,
+                    time() + (60 * 60 * 24 * 7),
+                    '/',
+                    '',
+                    isset($_SERVER['HTTPS']),
+                    true
+                );
             }
 
             header("Location: menu.php");
@@ -141,7 +162,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 
                 <div class="flex items-center justify-between">
                     <label class="flex items-center text-sm text-gray-300">
-                        <input type="checkbox" name="lembrar" class="mr-2 rounded bg-gray-700 border-gray-600 text-purple-500 focus:ring-purple-500">
+                        <!-- ⚠️ O name do checkbox precisa ser "remember" -->
+                        <input type="checkbox" name="remember" class="mr-2 rounded bg-gray-700 border-gray-600 text-purple-500 focus:ring-purple-500">
                         Lembrar minha conta
                     </label>
                     
