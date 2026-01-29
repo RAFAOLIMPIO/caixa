@@ -6,30 +6,21 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 
 if (!isset($_SESSION['usuario']['id'])) {
-    exit('Acesso negado');
+    die('Sessão expirada');
 }
 
-$usuario_id = $_SESSION['usuario']['id'];
+$usuario_id  = $_SESSION['usuario']['id'];
 $numero_loja = $_SESSION['usuario']['numero_loja'];
 
-// Buscar vendas
 $stmt = $pdo->prepare("
-    SELECT v.*, f.nome AS autozoner_nome
-    FROM vendas v
-    LEFT JOIN funcionarios f ON v.autozoner_id = f.id
-    WHERE v.usuario_id = :usuario_id
-    ORDER BY v.id DESC
+    SELECT cliente, valor_total, forma_pagamento, pago, data_venda
+    FROM vendas
+    WHERE usuario_id = :uid
+    ORDER BY id DESC
 ");
-$stmt->execute([':usuario_id' => $usuario_id]);
+$stmt->execute([':uid' => $usuario_id]);
 $vendas = $stmt->fetchAll();
 
-// Totais
-$total = 0;
-foreach ($vendas as $v) {
-    $total += (float)$v['valor_total'];
-}
-
-// HTML DO PDF
 ob_start();
 ?>
 <!DOCTYPE html>
@@ -38,21 +29,17 @@ ob_start();
 <meta charset="UTF-8">
 <style>
 body { font-family: DejaVu Sans; font-size: 12px; }
-h1 { text-align: center; }
+h2 { text-align: center; }
 table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-th, td { border: 1px solid #ccc; padding: 6px; }
+th, td { border: 1px solid #000; padding: 6px; }
 th { background: #eee; }
-.total { font-weight: bold; }
 </style>
 </head>
 <body>
 
-<h1>Relatório de Vendas</h1>
-<p><strong>Loja:</strong> <?= $numero_loja ?></p>
-<p><strong>Data:</strong> <?= date('d/m/Y H:i') ?></p>
+<h2>Relatório de Vendas - Loja <?= $numero_loja ?></h2>
 
 <table>
-<thead>
 <tr>
     <th>Data</th>
     <th>Cliente</th>
@@ -60,35 +47,29 @@ th { background: #eee; }
     <th>Pagamento</th>
     <th>Status</th>
 </tr>
-</thead>
-<tbody>
+
 <?php foreach ($vendas as $v): ?>
 <tr>
-    <td><?= date('d/m/Y', strtotime($v['data_venda'])) ?></td>
+    <td><?= date('d/m/Y H:i', strtotime($v['data_venda'])) ?></td>
     <td><?= htmlspecialchars($v['cliente']) ?></td>
     <td>R$ <?= number_format($v['valor_total'], 2, ',', '.') ?></td>
     <td><?= $v['forma_pagamento'] ?></td>
     <td><?= $v['pago'] ? 'Pago' : 'Pendente' ?></td>
 </tr>
 <?php endforeach; ?>
-</tbody>
-</table>
 
-<p class="total">Total Geral: R$ <?= number_format($total, 2, ',', '.') ?></p>
+</table>
 
 </body>
 </html>
 <?php
 $html = ob_get_clean();
 
-// DOMPDF
 $options = new Options();
 $options->set('isRemoteEnabled', true);
 
-$dompdf = new Dompdf($options);
-$dompdf->loadHtml($html);
-$dompdf->setPaper('A4', 'portrait');
-$dompdf->render();
-
-// Forçar download
-$dompdf->stream("relatorio_loja_{$numero_loja}.pdf", ["Attachment" => true]);
+$pdf = new Dompdf($options);
+$pdf->loadHtml($html);
+$pdf->setPaper('A4', 'portrait');
+$pdf->render();
+$pdf->stream("relatorio_loja_{$numero_loja}.pdf", ["Attachment" => true]);
