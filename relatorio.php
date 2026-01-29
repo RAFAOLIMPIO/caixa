@@ -1,4 +1,3 @@
-
 <?php
 // relatorio.php
 require_once __DIR__ . '/includes/config.php';
@@ -176,9 +175,11 @@ foreach ($vendas as $v) {
                     <i class="fas fa-cash-register mr-2"></i> Nova Venda
                 </a>
                 <?php if (!empty($vendas)): ?>
-                <button onclick="gerarPDF()" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition duration-200 shadow-lg">
-                    <i class="fas fa-file-pdf mr-2"></i> Exportar PDF
-                </button>
+                <!-- Trocou o botão atual por link para relatorio_pdf.php -->
+                <a href="relatorio_pdf.php" target="_blank" 
+                   class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition duration-200 shadow-lg">
+                   <i class="fas fa-file-pdf mr-2"></i> Exportar PDF
+                </a>
                 <button onclick="abrirModalLimparTudo()" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition duration-200 shadow-lg">
                     <i class="fas fa-trash-alt mr-2"></i> Limpar Tudo
                 </button>
@@ -521,17 +522,6 @@ foreach ($vendas as $v) {
             .fail(function() {
                 alert('Erro de conexão. Tente novamente.');
             });
-    }
-
-    function gerarPDF() {
-        // Simulação de geração de PDF
-        mostrarNotificacao('Gerando PDF... Em produção isso criaria um arquivo PDF para download', 'info');
-        
-        // Em produção, você poderia usar bibliotecas como:
-        // jsPDF, pdfmake, ou gerar no servidor com Dompdf
-        setTimeout(() => {
-            mostrarNotificacao('PDF gerado com sucesso! (Simulação)', 'success');
-        }, 1500);
     }
 
     function mostrarNotificacao(mensagem, tipo = 'info') {
