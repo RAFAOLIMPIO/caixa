@@ -939,3 +939,9 @@ a:focus-visible {
     color: rgba(156, 163, 175, 0.7);
     font-style: italic;
 }
+.input-money {
+    text-align: right;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
