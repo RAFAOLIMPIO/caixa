@@ -13,22 +13,28 @@ $erros = [];
 
 // Buscar autozoners e motoboys
 try {
-    // Autozoners
+    // Autozoners - usando numero_loja
     $stmtAuto = $pdo->prepare("
-    SELECT id, nome 
-    FROM funcionarios 
-    WHERE numero_loja = ?
-      AND LOWER(tipo) = 'autozoner'
-      AND ativo = TRUE
-    ORDER BY nome
-");
-$stmtAuto->execute([$numero_loja]);
-
+        SELECT id, nome 
+        FROM funcionarios 
+        WHERE numero_loja = ?
+          AND LOWER(tipo) = 'autozoner'
+          AND ativo = TRUE
+        ORDER BY nome
+    ");
+    $stmtAuto->execute([$numero_loja]);
     $autozoners = $stmtAuto->fetchAll();
     
-    // Motoboys
-    $stmtMoto = $pdo->prepare("SELECT id, nome FROM funcionarios WHERE usuario_id = ? AND tipo = 'motoboy' AND ativo = TRUE ORDER BY nome");
-    $stmtMoto->execute([$usuario_id]);
+    // Motoboys - usando numero_loja
+    $stmtMoto = $pdo->prepare("
+        SELECT id, nome 
+        FROM funcionarios 
+        WHERE numero_loja = ?
+          AND LOWER(tipo) = 'motoboy'
+          AND ativo = TRUE
+        ORDER BY nome
+    ");
+    $stmtMoto->execute([$numero_loja]);
     $motoboys = $stmtMoto->fetchAll();
 } catch (Exception $e) {
     $autozoners = [];
@@ -84,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $sql = "INSERT INTO vendas (cliente, valor_total, valor_pago, troco, forma_pagamento, motoboy, pago, usuario_id, numero_loja, autozoner_id, obs) 
-        VALUES (:cliente, :valor, :valor_pago, :troco, :forma_pagamento, :motoboy, :pago, :usuario_id, :numero_loja, :autozoner_id, :obs)";
+                    VALUES (:cliente, :valor, :valor_pago, :troco, :forma_pagamento, :motoboy, :pago, :usuario_id, :numero_loja, :autozoner_id, :obs)";
             
             $stmt = $pdo->prepare($sql);
             $result = $stmt->execute([
