@@ -7,15 +7,65 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+// 🔹 Verificação automática do cookie "remember_token"
+if (!isset($_SESSION['usuario']) && !empty($_COOKIE['remember_token'])) {
+    $token = $_COOKIE['remember_token'];
+
+    // Configurações de conexão com o banco Render PostgreSQL
+    define('DB_HOST', 'dpg-d5o45nmid0rc739178kg-a.oregon-postgres.render.com');
+    define('DB_PORT', '5432');
+    define('DB_NAME', 'autogest_db');
+    define('DB_USER', 'autogest_db_user');
+    define('DB_PASS', 'HCnQoffMQtvf0H1meJO4PyGgGKIw4edb');
+
+    try {
+        // Conexão temporária para verificar o token
+        $tempPdo = new PDO(
+            "pgsql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";sslmode=require",
+            DB_USER,
+            DB_PASS,
+            [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_TIMEOUT => 10
+            ]
+        );
+
+        // Buscar todos os usuários com token não expirado
+        $stmt = $tempPdo->prepare("
+            SELECT * FROM usuarios 
+            WHERE remember_expires > NOW()
+        ");
+        $stmt->execute();
+        $usuarios = $stmt->fetchAll();
+
+        foreach ($usuarios as $u) {
+            if (password_verify($token, $u['remember_token'])) {
+                $_SESSION['usuario'] = [
+                    'id' => $u['id'],
+                    'numero_loja' => $u['numero_loja'],
+                    'email' => $u['email']
+                ];
+                break;
+            }
+        }
+        
+        // Fechar conexão temporária
+        $tempPdo = null;
+    } catch (PDOException $e) {
+        error_log('Erro na verificação do cookie: ' . $e->getMessage());
+    }
+}
+
 ob_start();
 
-// Configurações de conexão com o banco Render PostgreSQL
+// Configurações de conexão com o banco Render PostgreSQL (principal)
 define('DB_HOST', 'dpg-d5o45nmid0rc739178kg-a.oregon-postgres.render.com');
 define('DB_PORT', '5432');
 define('DB_NAME', 'autogest_db');
 define('DB_USER', 'autogest_db_user');
 define('DB_PASS', 'HCnQoffMQtvf0H1meJO4PyGgGKIw4edb');
-
 
 try {
     // Conexão PDO com SSL simplificado (compatível com Render)
@@ -71,4 +121,34 @@ error_reporting(E_ALL);
 function usuario_logado()
 {
     return isset($_SESSION['usuario']) && !empty($_SESSION['usuario']['id']);
+}
+
+// =====================================================
+// 🔹 Função para verificar se usuário está logado
+// =====================================================
+function verificar_login() {
+    if (!usuario_logado()) {
+        header("Location: index.php");
+        exit();
+    }
+}
+
+// =====================================================
+// 🔹 Função para obter informações do usuário atual
+// =====================================================
+function usuario_atual() {
+    if (usuario_logado()) {
+        return $_SESSION['usuario'];
+    }
+    return null;
+}
+
+// =====================================================
+// 🔹 Função para logout seguro
+// =====================================================
+function logout() {
+    session_destroy();
+    setcookie('remember_token', '', time() - 3600, '/');
+    header("Location: index.php");
+    exit();
 }
