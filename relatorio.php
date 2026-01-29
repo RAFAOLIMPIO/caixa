@@ -1,3 +1,4 @@
+
 <?php
 // relatorio.php
 require_once __DIR__ . '/includes/config.php';
@@ -83,7 +84,8 @@ try {
         FROM vendas v 
         LEFT JOIN funcionarios f ON v.autozoner_id = f.id 
         WHERE v.usuario_id = :usuario_id 
-        ORDER BY v.data_venda DESC
+       ORDER BY v.id DESC
+
     ");
     $stmt->execute([':usuario_id' => $usuario_id]);
     $vendas = $stmt->fetchAll();
