@@ -153,6 +153,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             content: " *";
             color: #ef4444;
         }
+        .input-money {
+            text-align: left;
+            padding-left: 2.5rem;
+            direction: ltr;
+        }
+        .input-money::placeholder {
+            text-align: left;
+            direction: ltr;
+        }
+        .suggestions-list {
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        .suggestion-item:hover {
+            background-color: #4f46e5;
+            color: white;
+        }
+        .suggestion-selected {
+            background-color: #4f46e5;
+            color: white;
+        }
     </style>
 </head>
 <body class="caixa-bg">
@@ -212,30 +234,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <!-- Coluna 1 -->
                     <div class="space-y-4">
                         <!-- Cliente -->
-                        <div>
+                        <div class="relative">
                             <label class="block text-white text-sm font-medium mb-2 required-field">
                                 <i class="fas fa-user mr-2"></i>Cliente
                             </label>
-                            <input type="text" name="cliente" value="<?= htmlspecialchars($_POST['cliente'] ?? '') ?>" required
-                                class="input-modern" placeholder="Nome do cliente"
-                                autocomplete="off">
+                            <input 
+                                type="text" 
+                                name="cliente" 
+                                id="cliente" 
+                                autocomplete="off" 
+                                required 
+                                class="input-modern w-full" 
+                                placeholder="Nome do cliente" 
+                                value="<?= htmlspecialchars($_POST['cliente'] ?? '') ?>"
+                            >
+                            <ul id="listaClientes" class="absolute z-50 w-full bg-gray-800 border border-gray-700 rounded-lg mt-1 hidden suggestions-list"></ul>
                         </div>
 
                         <!-- Valor -->
-                        <div>
+                        <div class="relative">
                             <label class="block text-white text-sm font-medium mb-2 required-field">
                                 <i class="fas fa-dollar-sign mr-2"></i>Valor da Venda
                             </label>
-                           <input
-    type="text"
-    name="valor"
-    id="valor"
-    class="input-modern"
-    placeholder="0,00"
-    oninput="formatarMoeda(this); calcularTroco()"
-    onblur="autoCompletarCentavos(this); calcularTroco()"
-    autocomplete="off">
-
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">R$</span>
+                                <input 
+                                    type="text" 
+                                    name="valor" 
+                                    id="valor" 
+                                    value="<?= htmlspecialchars($_POST['valor'] ?? '') ?>" 
+                                    required 
+                                    class="input-modern input-money w-full" 
+                                    placeholder="0,00" 
+                                    oninput="formatarMoeda(this); calcularTroco()" 
+                                    autocomplete="off"
+                                >
+                            </div>
                         </div>
 
                         <!-- Forma de Pagamento -->
@@ -243,8 +277,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <label class="block text-white text-sm font-medium mb-2 required-field">
                                 <i class="fas fa-credit-card mr-2"></i>Forma de Pagamento
                             </label>
-                            <select name="forma_pagamento" id="forma_pagamento" required 
-                                    class="input-modern" onchange="toggleCamposDinheiro()">
+                            <select name="forma_pagamento" id="forma_pagamento" required class="input-modern w-full" onchange="toggleCamposDinheiro()">
                                 <option value="">Selecione...</option>
                                 <option value="Dinheiro" <?= ($_POST['forma_pagamento'] ?? '') === 'Dinheiro' ? 'selected' : '' ?>>Dinheiro</option>
                                 <option value="Cartão" <?= ($_POST['forma_pagamento'] ?? '') === 'Cartão' ? 'selected' : '' ?>>Cartão</option>
@@ -261,20 +294,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                             
                             <!-- Valor Pago -->
-                            <div>
+                            <div class="relative">
                                 <label class="block text-white text-sm font-medium mb-2">
                                     <i class="fas fa-money-bill-wave mr-2"></i>Valor Pago
                                 </label>
-                                <input
-    type="text"
-    name="valor_pago"
-    id="valor_pago"
-    class="input-modern"
-    placeholder="0,00"
-    oninput="formatarMoeda(this); calcularTroco()"
-    onblur="autoCompletarCentavos(this); calcularTroco()"
-    autocomplete="off">
-    </div>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">R$</span>
+                                    <input 
+                                        type="text" 
+                                        name="valor_pago" 
+                                        id="valor_pago" 
+                                        class="input-modern input-money w-full" 
+                                        placeholder="0,00" 
+                                        oninput="formatarMoeda(this); calcularTroco()" 
+                                        autocomplete="off"
+                                    >
+                                </div>
+                            </div>
 
                             <!-- Troco -->
                             <div>
@@ -295,7 +331,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <label class="block text-white text-sm font-medium mb-2 required-field">
                                 <i class="fas fa-user-tie mr-2"></i>Autozoner
                             </label>
-                            <select name="autozoner_id" required class="input-modern">
+                            <select name="autozoner_id" required class="input-modern w-full">
                                 <option value="">Selecione o autozoner...</option>
                                 <?php foreach ($autozoners as $a): ?>
                                     <option value="<?= $a['id'] ?>" <?= ($_POST['autozoner_id'] ?? '') == $a['id'] ? 'selected' : '' ?>>
@@ -319,7 +355,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <label class="block text-white text-sm font-medium mb-2">
                                 <i class="fas fa-motorcycle mr-2"></i>Entrega por
                             </label>
-                            <select name="motoboy_id" class="input-modern">
+                            <select name="motoboy_id" class="input-modern w-full">
                                 <option value="">Balcão (Cliente retira)</option>
                                 <option value="uber" <?= ($_POST['motoboy_id'] ?? '') === 'uber' ? 'selected' : '' ?>>Uber</option>
                                 <?php foreach ($motoboys as $m): ?>
@@ -341,13 +377,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <label class="block text-white text-sm font-medium mb-2">
                                 <i class="fas fa-sticky-note mr-2"></i>Observações
                             </label>
-                            <textarea name="obs" class="input-modern h-32 resize-none" 
-                                placeholder="Observações adicionais sobre a venda..."><?= htmlspecialchars($_POST['obs'] ?? '') ?></textarea>
+                            <textarea 
+                                name="obs" 
+                                id="obs" 
+                                class="input-modern w-full h-32 resize-none" 
+                                placeholder="Observações adicionais sobre a venda..."
+                            ><?= htmlspecialchars($_POST['obs'] ?? '') ?></textarea>
                         </div>
 
                         <!-- Botão Salvar -->
                         <div class="pt-4">
-                            <button type="submit" class="btn-modern">
+                            <button type="submit" class="btn-modern w-full">
                                 <i class="fas fa-save mr-2"></i> Registrar Venda
                             </button>
                         </div>
@@ -372,54 +412,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="glass-effect p-4 rounded-2xl text-center card-hover">
                     <i class="fas fa-lightbulb text-yellow-400 text-2xl mb-3"></i>
                     <h3 class="text-white font-semibold mb-1">Dica Rápida</h3>
-                    <p class="text-gray-400 text-xs">Vendas em dinheiro são marcadas como <span class="text-green-400">pagas</span> automaticamente</p>
+                    <p class="text-gray-400 text-xs">Pressione ENTER para avançar entre campos e salvar</p>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Função para formatar moeda
-<script>
-function formatarMoeda(input) {
-    let valor = input.value.replace(/\D/g, '');
-
-    if (valor === '') {
-        input.value = '';
-        return;
-    }
-
-    while (valor.length < 3) {
-        valor = '0' + valor;
-    }
-
-    const reais = valor.slice(0, -2);
-    const centavos = valor.slice(-2);
-
-    input.value =
-        reais.replace(/\B(?=(\d{3})+(?!\d))/g, '.') +
-        ',' +
-        centavos;
-}
-
-function autoCompletarCentavos(input) {
-    if (!input.value) return;
-
-    if (!input.value.includes(',')) {
-        input.value += ',00';
-        return;
-    }
-
-    const partes = input.value.split(',');
-
-    if (partes[1].length === 0) {
-        input.value = partes[0] + ',00';
-    } else if (partes[1].length === 1) {
-        input.value = partes[0] + ',' + partes[1] + '0';
-    }
-}
-</script>
-
+        // Variáveis globais
+        let selecionadoIndex = -1;
+        let debounceTimer;
+        
+        // Função para formatar moeda (esquerda para direita)
+        function formatarMoeda(input) {
+            // Remove tudo que não é dígito
+            let valor = input.value.replace(/\D/g, '');
+            
+            // Se vazio, mostra placeholder
+            if (valor === '') {
+                input.value = '';
+                return;
+            }
+            
+            // Formata como centavos
+            valor = (parseInt(valor) / 100).toFixed(2);
+            
+            // Formata com separadores de milhar
+            let partes = valor.split('.');
+            partes[0] = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            
+            input.value = partes.join(',');
         }
 
         // Função para calcular troco
@@ -471,6 +493,181 @@ function autoCompletarCentavos(input) {
             calcularTroco();
         }
 
+        // Sistema de busca de clientes
+        const clienteInput = document.getElementById('cliente');
+        const listaClientes = document.getElementById('listaClientes');
+
+        clienteInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            const termo = clienteInput.value.trim();
+
+            if (termo.length < 2) {
+                listaClientes.classList.add('hidden');
+                return;
+            }
+
+            debounceTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`buscar_clientes.php?q=${encodeURIComponent(termo)}&loja=<?= $numero_loja ?>`);
+                    const clientes = await res.json();
+
+                    if (clientes.length === 0) {
+                        listaClientes.classList.add('hidden');
+                        return;
+                    }
+
+                    listaClientes.innerHTML = '';
+                    clientes.forEach((nome, i) => {
+                        const li = document.createElement('li');
+                        li.textContent = nome;
+                        li.className = 'px-3 py-2 cursor-pointer hover:bg-purple-600 hover:text-white suggestion-item';
+                        li.onclick = () => selecionarCliente(nome);
+                        listaClientes.appendChild(li);
+                    });
+
+                    selecionadoIndex = -1;
+                    listaClientes.classList.remove('hidden');
+                } catch (error) {
+                    console.error('Erro ao buscar clientes:', error);
+                }
+            }, 300);
+        });
+
+        clienteInput.addEventListener('keydown', (e) => {
+            const itens = listaClientes.querySelectorAll('li');
+            if (listaClientes.classList.contains('hidden') || itens.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selecionadoIndex = (selecionadoIndex + 1) % itens.length;
+                updateSelection(itens);
+            }
+
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selecionadoIndex = (selecionadoIndex - 1 + itens.length) % itens.length;
+                updateSelection(itens);
+            }
+
+            if (e.key === 'Enter') {
+                if (selecionadoIndex >= 0) {
+                    e.preventDefault();
+                    selecionarCliente(itens[selecionadoIndex].textContent);
+                }
+            }
+
+            if (e.key === 'Escape') {
+                listaClientes.classList.add('hidden');
+            }
+        });
+
+        function updateSelection(itens) {
+            itens.forEach((item, i) => {
+                item.classList.toggle('bg-purple-600', i === selecionadoIndex);
+                item.classList.toggle('text-white', i === selecionadoIndex);
+            });
+        }
+
+        function selecionarCliente(nome) {
+            clienteInput.value = nome;
+            listaClientes.classList.add('hidden');
+            // Foca no próximo campo
+            document.getElementById('valor').focus();
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#cliente') && !e.target.closest('#listaClientes')) {
+                listaClientes.classList.add('hidden');
+            }
+        });
+
+        // Sistema de navegação com ENTER
+        const campos = ['cliente', 'valor', 'forma_pagamento', 'valor_pago', 'autozoner_id', 'motoboy_id', 'obs'];
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                
+                const campoAtual = document.activeElement;
+                const campoAtualId = campoAtual.id;
+                const campoAtualValue = campoAtual.value.trim();
+                
+                // ⚠️ Bloquear ENTER se campo obrigatório estiver vazio
+                if (campoAtual.required && !campoAtualValue) {
+                    campoAtual.focus();
+                    return;
+                }
+                
+                // Encontrar índice do campo atual
+                const indexAtual = campos.indexOf(campoAtualId);
+                
+                if (indexAtual !== -1) {
+                    // 🚀 ENTER no último campo = salvar direto
+                    if (indexAtual === campos.length - 1) {
+                        if (validarFormulario()) {
+                            document.getElementById('formVenda').submit();
+                        }
+                    } else {
+                        // Avançar para próximo campo
+                        const proximoCampoId = campos[indexAtual + 1];
+                        const proximoCampo = document.getElementById(proximoCampoId);
+                        
+                        if (proximoCampo) {
+                            // Se for select, focar e abrir
+                            if (proximoCampo.tagName === 'SELECT') {
+                                proximoCampo.focus();
+                                proximoCampo.size = 1; // Forçar abertura
+                                setTimeout(() => {
+                                    proximoCampo.size = 0;
+                                }, 300);
+                            } else {
+                                proximoCampo.focus();
+                                // Selecionar todo texto em campos de valor
+                                if (proximoCampoId === 'valor' || proximoCampoId === 'valor_pago') {
+                                    proximoCampo.select();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Tecla ESC fecha sugestões
+            if (e.key === 'Escape') {
+                listaClientes.classList.add('hidden');
+            }
+        });
+
+        // Validação do formulário
+        function validarFormulario() {
+            const formaPagamento = document.getElementById('forma_pagamento').value;
+            const valorInput = document.getElementById('valor').value;
+            const valorPagoInput = document.getElementById('valor_pago').value;
+            
+            const valor = parseFloat(valorInput.replace(/\./g, '').replace(',', '.')) || 0;
+            const valorPago = parseFloat(valorPagoInput.replace(/\./g, '').replace(',', '.')) || 0;
+            
+            if (formaPagamento === 'Dinheiro' && valorPago < valor) {
+                alert('❌ Para pagamento em dinheiro, o valor pago não pode ser menor que o valor da venda.');
+                document.getElementById('valor_pago').focus();
+                return false;
+            }
+            
+            if (document.getElementById('cliente').value.trim() === '') {
+                alert('❌ Preencha o nome do cliente.');
+                document.getElementById('cliente').focus();
+                return false;
+            }
+            
+            if (valor <= 0) {
+                alert('❌ O valor da venda deve ser maior que zero.');
+                document.getElementById('valor').focus();
+                return false;
+            }
+            
+            return true;
+        }
+
         // Inicializar campos ao carregar a página
         document.addEventListener('DOMContentLoaded', function() {
             toggleCamposDinheiro();
@@ -486,80 +683,18 @@ function autoCompletarCentavos(input) {
                 formatarMoeda(valorPagoInput);
             }
             
-            // Focar no primeiro campo
-            document.querySelector('input[name="cliente"]').focus();
+            // Focar no campo cliente
+            document.getElementById('cliente').focus();
         });
 
         // Validar formulário antes de enviar
         document.getElementById('formVenda').addEventListener('submit', function(e) {
-            const formaPagamento = document.getElementById('forma_pagamento').value;
-            const valorInput = document.getElementById('valor').value;
-            const valorPagoInput = document.getElementById('valor_pago').value;
-            
-            const valor = parseFloat(valorInput.replace(/\./g, '').replace(',', '.')) || 0;
-            const valorPago = parseFloat(valorPagoInput.replace(/\./g, '').replace(',', '.')) || 0;
-            
-            if (formaPagamento === 'Dinheiro' && valorPago < valor) {
+            if (!validarFormulario()) {
                 e.preventDefault();
-                alert('❌ Para pagamento em dinheiro, o valor pago não pode ser menor que o valor da venda.');
-                document.getElementById('valor_pago').focus();
                 return false;
             }
-            
             return true;
-        });
-
-        // Tecla Enter avança para próximo campo
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const form = document.getElementById('formVenda');
-                const index = Array.prototype.indexOf.call(form, e.target);
-                form.elements[index + 1].focus();
-            }
         });
     </script>
 </body>
 </html>
-                <script>
-document.addEventListener('keydown', function (e) {
-    if (e.key !== 'Enter') return;
-
-    const ativo = document.activeElement;
-
-    // Campos que usam moeda
-    if (ativo.id === 'valor' || ativo.id === 'valor_pago') {
-        e.preventDefault();
-        autoCompletarCentavos(ativo);
-        calcularTroco();
-
-        if (ativo.id === 'valor') {
-            document.getElementById('forma_pagamento').focus();
-        } else if (ativo.id === 'valor_pago') {
-            document.querySelector('select[name="autozoner_id"]').focus();
-        }
-        return;
-    }
-
-    // Forma de pagamento
-    if (ativo.id === 'forma_pagamento') {
-        e.preventDefault();
-
-        if (ativo.value === 'Dinheiro') {
-            toggleCamposDinheiro();
-            setTimeout(() => {
-                document.getElementById('valor_pago').focus();
-            }, 200);
-        } else {
-            document.querySelector('select[name="autozoner_id"]').focus();
-        }
-        return;
-    }
-
-    // Evita submit acidental
-    if (ativo.tagName === 'TEXTAREA') {
-        return;
-    }
-});
-</script>
-
