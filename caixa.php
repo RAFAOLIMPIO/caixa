@@ -369,29 +369,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script>
         // Função para formatar moeda
-        function formatarMoeda(input) {
-            let value = input.value.replace(/\D/g, '');
-            if (value === '') {
-                input.value = '';
-                return;
-            }
-            
-            // Garantir que temos pelo menos 3 dígitos para centavos
-            while (value.length < 3) {
-                value = '0' + value;
-            }
-            
-            const reais = value.slice(0, -2);
-            const centavos = value.slice(-2);
-            
-            let valorFormatado = '';
-            if (reais) {
-                valorFormatado = reais.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-            } else {
-                valorFormatado = '0';
-            }
-            
-            input.value = valorFormatado + ',' + centavos;
+     <script>
+function formatarMoeda(input) {
+    let valor = input.value;
+
+    // Remove tudo que não for número ou vírgula
+    valor = valor.replace(/[^0-9,]/g, '');
+
+    // Impede mais de uma vírgula
+    const partes = valor.split(',');
+    if (partes.length > 2) {
+        valor = partes[0] + ',' + partes.slice(1).join('');
+    }
+
+    let inteiro = partes[0];
+    let decimal = partes[1] ?? '';
+
+    // Limita casas decimais a 2
+    decimal = decimal.substring(0, 2);
+
+    // Formata milhar
+    inteiro = inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+    input.value = decimal.length > 0
+        ? `${inteiro},${decimal}`
+        : inteiro;
+}
+</script>
+
         }
 
         // Função para calcular troco
