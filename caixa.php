@@ -521,3 +521,45 @@ function autoCompletarCentavos(input) {
     </script>
 </body>
 </html>
+                <script>
+document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter') return;
+
+    const ativo = document.activeElement;
+
+    // Campos que usam moeda
+    if (ativo.id === 'valor' || ativo.id === 'valor_pago') {
+        e.preventDefault();
+        autoCompletarCentavos(ativo);
+        calcularTroco();
+
+        if (ativo.id === 'valor') {
+            document.getElementById('forma_pagamento').focus();
+        } else if (ativo.id === 'valor_pago') {
+            document.querySelector('select[name="autozoner_id"]').focus();
+        }
+        return;
+    }
+
+    // Forma de pagamento
+    if (ativo.id === 'forma_pagamento') {
+        e.preventDefault();
+
+        if (ativo.value === 'Dinheiro') {
+            toggleCamposDinheiro();
+            setTimeout(() => {
+                document.getElementById('valor_pago').focus();
+            }, 200);
+        } else {
+            document.querySelector('select[name="autozoner_id"]').focus();
+        }
+        return;
+    }
+
+    // Evita submit acidental
+    if (ativo.tagName === 'TEXTAREA') {
+        return;
+    }
+});
+</script>
+
