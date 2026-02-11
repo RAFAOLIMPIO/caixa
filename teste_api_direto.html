@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste API Vendas</title>
+</head>
+<body>
+    <h2>Teste da API Vendas</h2>
+    
+    <div>
+        <h3>1. Teste de conexão:</h3>
+        <button onclick="testeConexao()">Testar Conexão</button>
+        <div id="result1"></div>
+    </div>
+    
+    <div>
+        <h3>2. Teste devolução (mude o ID):</h3>
+        <input type="number" id="vendaId" placeholder="ID da venda" value="1">
+        <select id="tipoDevolucao">
+            <option value="total">Total</option>
+            <option value="parcial">Parcial</option>
+        </select>
+        <input type="text" id="valorDevolvido" placeholder="Valor para parcial" value="50,00">
+        <button onclick="testeDevolucao()">Testar Devolução</button>
+        <div id="result2"></div>
+    </div>
+    
+    <script>
+    function testeConexao() {
+        const formData = new FormData();
+        formData.append('action', 'teste');
+        
+        fetch('api_vendas.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('result1').innerHTML = 
+                '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        })
+        .catch(error => {
+            document.getElementById('result1').innerHTML = 
+                'ERRO: ' + error;
+        });
+    }
+    
+    function testeDevolucao() {
+        const vendaId = document.getElementById('vendaId').value;
+        const tipo = document.getElementById('tipoDevolucao').value;
+        const valorDevolvido = document.getElementById('valorDevolvido').value;
+        
+        const formData = new FormData();
+        formData.append('action', 'devolver_venda');
+        formData.append('id', vendaId);
+        formData.append('tipo', tipo);
+        formData.append('valor_devolvido', valorDevolvido);
+        
+        fetch('api_vendas.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('result2').innerHTML = 
+                '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        })
+        .catch(error => {
+            document.getElementById('result2').innerHTML = 
+                'ERRO: ' + error;
+        });
+    }
+    </script>
+</body>
+</html>
