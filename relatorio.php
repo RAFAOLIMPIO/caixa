@@ -98,8 +98,12 @@ foreach ($vendas as $v) {
     }
 }
 
-// Calcular total geral
-$total_geral = $total_vendas + $total_devolvido + $total_parcial;
+// --- AJUSTES SOLICITADOS ---
+// 1. Total de Vendas Lançadas = soma de todos os valores originais
+$total_lancadas = $total_vendas + $total_devolvido + $total_parcial;
+
+// 2. Incluir os pagos parciais no total de vendas pagas
+$total_pago += $total_parcial_pago;
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -232,9 +236,6 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         .badge-balcao {
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         }
-        .badge-parcial-pago {
-            background: linear-gradient(135deg, #f59e0b 0%, #10b981 100%);
-        }
         .loading-overlay {
             display: none;
             position: fixed;
@@ -299,16 +300,18 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
             </div>
         </div>
 
-        <!-- Cards de Resumo -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 mb-8">
+        <!-- Cards de Resumo (6 cards, conforme solicitado) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+            <!-- Vendas Lançadas -->
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up">
                 <div class="w-10 h-10 mx-auto mb-2 badge-total rounded-full flex items-center justify-center">
                     <i class="fas fa-shopping-cart text-white text-lg"></i>
                 </div>
-                <h3 class="text-gray-400 text-xs mb-1">Total Vendas</h3>
-                <p class="text-lg font-bold text-white">R$ <?= number_format($total_vendas, 2, ',', '.') ?></p>
+                <h3 class="text-gray-400 text-xs mb-1">Vendas Lançadas</h3>
+                <p class="text-lg font-bold text-white">R$ <?= number_format($total_lancadas, 2, ',', '.') ?></p>
             </div>
 
+            <!-- Vendas Pagas (agora inclui parciais pagas) -->
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.1s">
                 <div class="w-10 h-10 mx-auto mb-2 badge-pago rounded-full flex items-center justify-center">
                     <i class="fas fa-check-circle text-white text-lg"></i>
@@ -317,6 +320,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                 <p class="text-lg font-bold text-white">R$ <?= number_format($total_pago, 2, ',', '.') ?></p>
             </div>
 
+            <!-- A Receber -->
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.2s">
                 <div class="w-10 h-10 mx-auto mb-2 badge-pendente rounded-full flex items-center justify-center">
                     <i class="fas fa-clock text-white text-lg"></i>
@@ -325,6 +329,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                 <p class="text-lg font-bold text-white">R$ <?= number_format($total_pendente, 2, ',', '.') ?></p>
             </div>
 
+            <!-- Devoluções (total devolvido, parcial + total) -->
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.3s">
                 <div class="w-10 h-10 mx-auto mb-2 badge-devolucao rounded-full flex items-center justify-center">
                     <i class="fas fa-exchange-alt text-white text-lg"></i>
@@ -333,7 +338,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                 <p class="text-lg font-bold text-white">R$ <?= number_format($total_devolvido + $total_parcial, 2, ',', '.') ?></p>
             </div>
 
-            <!-- CARD POS (UBER + MOTOBOY) -->
+            <!-- POS (Uber / Motoboy) -->
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.4s">
                 <div class="w-10 h-10 mx-auto mb-2 badge-pos rounded-full flex items-center justify-center">
                     <i class="fas fa-mobile-alt text-white text-lg"></i>
@@ -342,22 +347,13 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                 <p class="text-lg font-bold text-white">R$ <?= number_format($total_pos, 2, ',', '.') ?></p>
             </div>
 
-            <!-- CARD BALCÃO -->
+            <!-- Balcão -->
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.5s">
                 <div class="w-10 h-10 mx-auto mb-2 badge-balcao rounded-full flex items-center justify-center">
                     <i class="fas fa-store text-white text-lg"></i>
                 </div>
                 <h3 class="text-gray-400 text-xs mb-1">Balcão</h3>
                 <p class="text-lg font-bold text-white">R$ <?= number_format($total_balcao, 2, ',', '.') ?></p>
-            </div>
-
-            <!-- CARD PARCIAL PAGO -->
-            <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.6s">
-                <div class="w-10 h-10 mx-auto mb-2 badge-parcial-pago rounded-full flex items-center justify-center">
-                    <i class="fas fa-percentage text-white text-lg"></i>
-                </div>
-                <h3 class="text-gray-400 text-xs mb-1">Parcial Pago</h3>
-                <p class="text-lg font-bold text-white">R$ <?= number_format($total_parcial_pago, 2, ',', '.') ?></p>
             </div>
         </div>
 
@@ -714,7 +710,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                 </div>
                 <p class="text-white mb-4">
                     Você está prestes a excluir <strong class="text-red-400">todas as <?= count($vendas) ?> vendas</strong> do sistema.<br>
-                    <span class="text-gray-400 text-sm">Total: R$ <?= number_format($total_geral, 2, ',', '.') ?></span>
+                    <span class="text-gray-400 text-sm">Total lançado: R$ <?= number_format($total_lancadas, 2, ',', '.') ?></span>
                 </p>
                 <p class="text-gray-400 text-sm mb-4">
                     Esta ação não pode ser desfeita. Certifique-se de que exportou o relatório antes de continuar.
