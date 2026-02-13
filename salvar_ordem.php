@@ -1,44 +1,50 @@
 <?php
-// salvar_ordem.php
 require 'includes/config.php';
 
+$data = json_decode(file_get_contents('php://input'), true);
+
 if (!isset($_SESSION['usuario']['id'])) {
-    header('Content-Type: application/json');
     echo json_encode(['error' => 'Não autorizado']);
     exit();
 }
 
-$data = json_decode(file_get_contents('php://input'), true);
 $usuario_id = $_SESSION['usuario']['id'];
 
-if (is_array($data)) {
+if (isset($data['ordem']) && is_array($data['ordem'])) {
+
+    $data = $data['ordem'];
+
     try {
         $pdo->beginTransaction();
-        
-        foreach ($data as $item) {
+
+        foreach ($data as $index => $item) {
+
+            $id = (int)$item['id'];
+
             $stmt = $pdo->prepare("
-                UPDATE vendas 
-                SET ordem = ? 
-                WHERE id = ? 
+                UPDATE vendas
+                SET ordem = ?
+                WHERE id = ?
                 AND usuario_id = ?
             ");
-            $stmt->execute([
-                $item['ordem'],
-                $item['id'],
-                $usuario_id
-            ]);
+
+            $stmt->execute([$index, $id, $usuario_id]);
         }
-        
+
         $pdo->commit();
-        
-        header('Content-Type: application/json');
-        echo json_encode(['success' => true]);
+
+       echo json_encode(['ok' => true]);
+
+
     } catch (Exception $e) {
         $pdo->rollBack();
-        header('Content-Type: application/json');
-        echo json_encode(['error' => $e->getMessage()]);
+      echo json_encode([
+    'ok' => false,
+    'error' => $e->getMessage()
+]);
+
     }
+
 } else {
-    header('Content-Type: application/json');
     echo json_encode(['error' => 'Dados inválidos']);
 }

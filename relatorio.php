@@ -1,5 +1,5 @@
 <?php
-// relatorio.php - VERSÃO COMPLETA COM API INTEGRADA
+// relatorio.php - VERSÃO COMPLETA COM PESQUISA DE CLIENTE + FECHAMENTO DE CAIXA
 require_once __DIR__ . '/includes/config.php';
 
 if (!isset($_SESSION['usuario'])) {
@@ -46,7 +46,7 @@ try {
     </div>");
 }
 
-// Calcular totais
+// CALCULAR TOTAIS (MODIFICADO)
 $total_vendas = 0;
 $total_pago = 0;
 $total_pendente = 0;
@@ -54,7 +54,7 @@ $total_devolvido = 0;
 $total_parcial = 0;
 $total_pos = 0;
 $total_balcao = 0;
-$total_parcial_pago = 0;
+$total_pos_pendente = 0;
 
 foreach ($vendas as $v) {
     $valor = (float)$v['valor_total'];
@@ -62,13 +62,8 @@ foreach ($vendas as $v) {
     $motoboy = strtolower(trim($v['motoboy'] ?? ''));
     $pago = isset($v['pago']) && ($v['pago'] == true || $v['pago'] == 1);
     
-    // Calcular total POS (tudo que NÃO é balcão)
-    if ($motoboy !== 'balcão' && $status === 'normal') {
-        $total_pos += $valor;
-    } elseif ($motoboy === 'balcão' && $status === 'normal') {
-        $total_balcao += $valor;
-    }
-    
+    $is_pos = ($motoboy !== 'balcão');
+
     if ($status === 'devolvido') {
         $total_devolvido += $valor;
     } elseif ($status === 'parcial') {
@@ -76,29 +71,41 @@ foreach ($vendas as $v) {
         $total_parcial += $valor_devolvido;
         $valor_liquido = $valor - $valor_devolvido;
         $total_vendas += $valor_liquido;
-        
-        // Se devolução parcial estiver paga
-        if ($pago) {
-            $total_parcial_pago += $valor_liquido;
-        }
-        
-        if ($motoboy !== 'balcão') {
+
+        if ($is_pos) {
             $total_pos += $valor_liquido;
-        } elseif ($motoboy === 'balcão') {
+            if (!$pago) {
+                $total_pos_pendente += $valor_liquido;
+            }
+        } else {
             $total_balcao += $valor_liquido;
         }
-    } else {
+
+        if ($pago) {
+            $total_pago += $valor_liquido;
+        } else {
+            $total_pendente += $valor_liquido;
+        }
+    } else { // normal
         $total_vendas += $valor;
-    }
-    
-    if (!empty($v['pago']) && $status === 'normal') {
-        $total_pago += $valor;
-    } elseif ($status === 'normal') {
-        $total_pendente += $valor;
+
+        if ($is_pos) {
+            $total_pos += $valor;
+        } else {
+            $total_balcao += $valor;
+        }
+
+        if ($pago) {
+            $total_pago += $valor;
+        } else {
+            $total_pendente += $valor;
+            if ($is_pos) {
+                $total_pos_pendente += $valor;
+            }
+        }
     }
 }
 
-// Calcular total geral
 $total_geral = $total_vendas + $total_devolvido + $total_parcial;
 ?>
 <!DOCTYPE html>
@@ -232,8 +239,11 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         .badge-balcao {
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         }
-        .badge-parcial-pago {
-            background: linear-gradient(135deg, #f59e0b 0%, #10b981 100%);
+        .badge-receber-pos {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+        }
+        .badge-caixa {
+            background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
         }
         .loading-overlay {
             display: none;
@@ -259,6 +269,14 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         .btn-reverter:hover {
             background: rgba(59, 130, 246, 0.3);
         }
+        .search-highlight {
+            background: rgba(124, 58, 237, 0.3) !important;
+            border-left: 4px solid #8b5cf6 !important;
+        }
+        .cliente-summary {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid #10b981;
+        }
     </style>
 </head>
 <body class="relatorio-bg min-h-screen px-4 py-8">
@@ -277,21 +295,34 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
             <p class="text-gray-400">Loja <?= htmlspecialchars($numero_loja) ?> - Total de <?= count($vendas) ?> vendas registradas</p>
         </div>
 
-        <!-- Botões de Navegação -->
+        <!-- 🔍 Barra de Pesquisa de Cliente + Botões -->
         <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
             <a href="menu.php" class="inline-flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition duration-200 shadow-lg">
                 <i class="fas fa-arrow-left mr-2"></i> Voltar ao Menu
             </a>
+            
+            <div class="flex flex-1 justify-center max-w-md mx-4">
+                <div class="relative w-full">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                    <input type="text" id="searchCliente" placeholder="Buscar cliente..." 
+                           class="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                </div>
+            </div>
+            
             <div class="flex gap-2">
                 <a href="caixa.php" class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition duration-200 shadow-lg">
                     <i class="fas fa-cash-register mr-2"></i> Nova Venda
                 </a>
                 <?php if (!empty($vendas)): ?>
-                <!-- BOTÃO PDF -->
                 <a href="relatorio_pdf.php" target="_blank" 
                    class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition duration-200 shadow-lg">
                    <i class="fas fa-file-pdf mr-2"></i> Exportar PDF
                 </a>
+                <button onclick="abrirModalFecharCaixa()" class="inline-flex items-center px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white rounded-lg transition duration-200 shadow-lg">
+                    <i class="fas fa-cash-register mr-2"></i> Fechar Caixa
+                </button>
                 <button onclick="abrirModalLimparTudo()" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition duration-200 shadow-lg">
                     <i class="fas fa-trash-alt mr-2"></i> Limpar Tudo
                 </button>
@@ -299,7 +330,24 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
             </div>
         </div>
 
-        <!-- Cards de Resumo -->
+        <!-- 🧾 Card de Resumo do Cliente Pesquisado (aparece quando há busca) -->
+        <div id="clienteSummaryCard" class="glass-effect p-4 rounded-2xl mb-6 hidden fade-in-up cliente-summary">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <i class="fas fa-user-circle text-3xl text-purple-400 mr-3"></i>
+                    <div>
+                        <h3 class="text-white font-semibold">Cliente: <span id="clienteNomePesquisado" class="text-purple-300"></span></h3>
+                        <p class="text-gray-400 text-sm">Total gasto: <span id="clienteTotalGasto" class="text-green-400 font-bold">R$ 0,00</span></p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="text-gray-400 text-sm">Vendas pendentes:</span>
+                    <span id="clientePendentes" class="text-red-400 font-bold ml-2">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cards de Resumo (7 cards) -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 mb-8">
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up">
                 <div class="w-10 h-10 mx-auto mb-2 badge-total rounded-full flex items-center justify-center">
@@ -333,7 +381,6 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                 <p class="text-lg font-bold text-white">R$ <?= number_format($total_devolvido + $total_parcial, 2, ',', '.') ?></p>
             </div>
 
-            <!-- CARD POS (UBER + MOTOBOY) -->
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.4s">
                 <div class="w-10 h-10 mx-auto mb-2 badge-pos rounded-full flex items-center justify-center">
                     <i class="fas fa-mobile-alt text-white text-lg"></i>
@@ -342,7 +389,6 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                 <p class="text-lg font-bold text-white">R$ <?= number_format($total_pos, 2, ',', '.') ?></p>
             </div>
 
-            <!-- CARD BALCÃO -->
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.5s">
                 <div class="w-10 h-10 mx-auto mb-2 badge-balcao rounded-full flex items-center justify-center">
                     <i class="fas fa-store text-white text-lg"></i>
@@ -351,13 +397,12 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                 <p class="text-lg font-bold text-white">R$ <?= number_format($total_balcao, 2, ',', '.') ?></p>
             </div>
 
-            <!-- CARD PARCIAL PAGO -->
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.6s">
-                <div class="w-10 h-10 mx-auto mb-2 badge-parcial-pago rounded-full flex items-center justify-center">
-                    <i class="fas fa-percentage text-white text-lg"></i>
+                <div class="w-10 h-10 mx-auto mb-2 badge-receber-pos rounded-full flex items-center justify-center">
+                    <i class="fas fa-hand-holding-usd text-white text-lg"></i>
                 </div>
-                <h3 class="text-gray-400 text-xs mb-1">Parcial Pago</h3>
-                <p class="text-lg font-bold text-white">R$ <?= number_format($total_parcial_pago, 2, ',', '.') ?></p>
+                <h3 class="text-gray-400 text-xs mb-1">Receber POS</h3>
+                <p class="text-lg font-bold text-white">R$ <?= number_format($total_pos_pendente, 2, ',', '.') ?></p>
             </div>
         </div>
 
@@ -428,14 +473,22 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                                     $status_text = 'Pendente';
                                 }
                             ?>
-                            <tr class="venda-item <?= $status_class ?> sortable-row" data-id="<?= $v['id'] ?>">
+                            <tr class="venda-item <?= $status_class ?> sortable-row" 
+                                data-id="<?= $v['id'] ?>"
+                                data-cliente="<?= htmlspecialchars(strtolower($v['cliente'] ?? '')) ?>"
+                                data-valor="<?= (float)$v['valor_total'] ?>"
+                                data-status="<?= $status ?>"
+                                data-pago="<?= $pago ? '1' : '0' ?>"
+                                data-forma="<?= htmlspecialchars($v['forma_pagamento'] ?? '') ?>"
+                                data-motoboy="<?= htmlspecialchars($v['motoboy'] ?? 'Balcão') ?>"
+                                data-valor-devolvido="<?= (float)$valor_devolvido ?>">
                                 <td class="p-3 text-white">
                                     <div class="font-semibold"><?= htmlspecialchars($data) ?></div>
                                     <div class="text-gray-400 text-xs">
                                         <?= isset($v['data_venda']) ? date('d/m/Y', strtotime($v['data_venda'])) : '' ?>
                                     </div>
                                 </td>
-                                <td class="p-3 text-white font-medium"><?= htmlspecialchars($v['cliente'] ?? '-') ?></td>
+                                <td class="p-3 text-white font-medium cliente-nome"><?= htmlspecialchars($v['cliente'] ?? '-') ?></td>
                                 <td class="p-3">
                                     <div class="text-white font-bold">R$ <?= $valor ?></div>
                                     <?php if ($status === 'parcial' && $valor_devolvido > 0): ?>
@@ -543,194 +596,246 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         </div>
     </div>
 
-    <!-- Modal para editar observação -->
-    <div id="modalObs" class="fixed inset-0 z-50 hidden">
+    <!-- ========== MODAIS ========== -->
+    <!-- Modal Observação -->
+    <div id="modalObs" class="fixed inset-0 z-50 hidden items-center justify-center">
         <div class="fixed inset-0 bg-black bg-opacity-70" onclick="fecharModalObs()"></div>
-        <div class="fixed inset-0 flex items-center justify-center p-4">
-            <div class="glass-effect rounded-2xl p-6 w-full max-w-md transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
-                <h3 class="text-xl font-bold text-white mb-4 flex items-center">
-                    <i class="fas fa-sticky-note mr-2 text-purple-400"></i>
-                    Editar Observação
-                </h3>
-                <textarea id="obsField" class="input-modern w-full h-32 resize-none" placeholder="Digite a observação sobre esta venda..."></textarea>
-                <input type="hidden" id="obsId">
-                <div class="flex justify-end space-x-3 mt-4">
-                    <button onclick="fecharModalObs()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition duration-200">
-                        Cancelar
-                    </button>
-                    <button onclick="salvarObservacao()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition duration-200 flex items-center">
-                        <i class="fas fa-save mr-2"></i>Salvar
-                    </button>
-                </div>
+        <div class="relative glass-effect rounded-2xl p-6 w-full max-w-md transform transition-all duration-300 scale-95 opacity-0" id="modalObsContent">
+            <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                <i class="fas fa-sticky-note mr-2 text-purple-400"></i>
+                Editar Observação
+            </h3>
+            <textarea id="obsField" class="input-modern w-full h-32 resize-none" placeholder="Digite a observação sobre esta venda..."></textarea>
+            <input type="hidden" id="obsId">
+            <div class="flex justify-end space-x-3 mt-4">
+                <button onclick="fecharModalObs()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition duration-200">
+                    Cancelar
+                </button>
+                <button onclick="salvarObservacao()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition duration-200 flex items-center">
+                    <i class="fas fa-save mr-2"></i>Salvar
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Modal para editar venda -->
-    <div id="modalEditar" class="fixed inset-0 z-50 hidden">
+    <!-- Modal Editar Venda -->
+    <div id="modalEditar" class="fixed inset-0 z-50 hidden items-center justify-center">
         <div class="fixed inset-0 bg-black bg-opacity-70" onclick="fecharModalEditar()"></div>
-        <div class="fixed inset-0 flex items-center justify-center p-4">
-            <div class="glass-effect rounded-2xl p-6 w-full max-w-md transform transition-all duration-300 scale-95 opacity-0" id="modalEditarContent">
-                <h3 class="text-xl font-bold text-white mb-4 flex items-center">
-                    <i class="fas fa-edit mr-2 text-blue-400"></i>
-                    Editar Venda
-                </h3>
-                <div class="space-y-4">
-                    <input type="hidden" id="editarId">
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-2">Cliente</label>
-                        <input type="text" id="editarCliente" class="input-modern w-full">
-                    </div>
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-2">Valor</label>
-                        <input type="text" id="editarValor" class="input-modern w-full" oninput="formatarMoeda(this)">
-                    </div>
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-2">Autozoner</label>
-                        <select id="editarAutozoner" class="input-modern w-full">
-                            <option value="">Selecione...</option>
-                            <?php foreach ($autozoners as $a): ?>
-                                <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nome']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-2">Forma de Pagamento</label>
-                        <select id="editarForma" class="input-modern w-full">
-                            <option value="Dinheiro">Dinheiro</option>
-                            <option value="Cartão">Cartão</option>
-                            <option value="Pix">Pix</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-2">Motoboy/Entrega</label>
-                        <input type="text" id="editarMotoboy" class="input-modern w-full" placeholder="Balcão, Uber, ou nome do motoboy">
-                    </div>
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-2">Observações</label>
-                        <textarea id="editarObs" class="input-modern w-full h-24 resize-none"></textarea>
-                    </div>
+        <div class="relative glass-effect rounded-2xl p-6 w-full max-w-md transform transition-all duration-300 scale-95 opacity-0" id="modalEditarContent">
+            <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                <i class="fas fa-edit mr-2 text-blue-400"></i>
+                Editar Venda
+            </h3>
+            <div class="space-y-4">
+                <input type="hidden" id="editarId">
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Cliente</label>
+                    <input type="text" id="editarCliente" class="input-modern w-full">
                 </div>
-                <div class="flex justify-end space-x-3 mt-4">
-                    <button onclick="fecharModalEditar()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition duration-200">
-                        Cancelar
-                    </button>
-                    <button onclick="salvarEdicao()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition duration-200 flex items-center">
-                        <i class="fas fa-save mr-2"></i>Salvar Alterações
-                    </button>
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Valor</label>
+                    <input type="text" id="editarValor" class="input-modern w-full" oninput="formatarMoeda(this)">
                 </div>
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Autozoner</label>
+                    <select id="editarAutozoner" class="input-modern w-full">
+                        <option value="">Selecione...</option>
+                        <?php foreach ($autozoners as $a): ?>
+                            <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nome']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Forma de Pagamento</label>
+                    <select id="editarForma" class="input-modern w-full">
+                        <option value="Dinheiro">Dinheiro</option>
+                        <option value="Cartão">Cartão</option>
+                        <option value="Pix">Pix</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Motoboy/Entrega</label>
+                    <input type="text" id="editarMotoboy" class="input-modern w-full" placeholder="Balcão, Uber, ou nome do motoboy">
+                </div>
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Observações</label>
+                    <textarea id="editarObs" class="input-modern w-full h-24 resize-none"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-4">
+                <button onclick="fecharModalEditar()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition duration-200">
+                    Cancelar
+                </button>
+                <button onclick="salvarEdicao()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition duration-200 flex items-center">
+                    <i class="fas fa-save mr-2"></i>Salvar Alterações
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Modal para devolução -->
-    <div id="modalDevolucao" class="fixed inset-0 z-50 hidden">
+    <!-- Modal Devolução -->
+    <div id="modalDevolucao" class="fixed inset-0 z-50 hidden items-center justify-center">
         <div class="fixed inset-0 bg-black bg-opacity-70" onclick="fecharModalDevolucao()"></div>
-        <div class="fixed inset-0 flex items-center justify-center p-4">
-            <div class="glass-effect rounded-2xl p-6 w-full max-w-md transform transition-all duration-300 scale-95 opacity-0" id="modalDevolucaoContent">
-                <h3 class="text-xl font-bold text-white mb-4 flex items-center">
-                    <i class="fas fa-exchange-alt mr-2 text-orange-400"></i>
-                    Registrar Devolução
-                </h3>
-                <div class="mb-4">
-                    <p class="text-white">Cliente: <span id="devolucaoCliente" class="font-semibold"></span></p>
-                    <p class="text-white">Valor da venda: R$ <span id="devolucaoValor" class="font-semibold"></span></p>
-                </div>
-                <div class="space-y-4">
-                    <input type="hidden" id="devolucaoId">
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-2">Tipo de Devolução</label>
-                        <div class="flex space-x-4">
-                            <label class="flex items-center">
-                                <input type="radio" name="tipoDevolucao" value="total" checked class="mr-2" onchange="toggleValorDevolucao()">
-                                <span class="text-white">Total</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="radio" name="tipoDevolucao" value="parcial" class="mr-2" onchange="toggleValorDevolucao()">
-                                <span class="text-white">Parcial</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div id="campoValorParcial" style="display: none;">
-                        <label class="block text-white text-sm font-medium mb-2">Valor Devolvido</label>
-                        <input type="text" id="valorDevolvido" class="input-modern w-full" oninput="formatarMoeda(this)" placeholder="0,00">
-                        <p class="text-gray-400 text-xs mt-1">O restante do valor continuará como pendente/pago</p>
+        <div class="relative glass-effect rounded-2xl p-6 w-full max-w-md transform transition-all duration-300 scale-95 opacity-0" id="modalDevolucaoContent">
+            <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                <i class="fas fa-exchange-alt mr-2 text-orange-400"></i>
+                Registrar Devolução
+            </h3>
+            <div class="mb-4">
+                <p class="text-white">Cliente: <span id="devolucaoCliente" class="font-semibold"></span></p>
+                <p class="text-white">Valor da venda: R$ <span id="devolucaoValor" class="font-semibold"></span></p>
+            </div>
+            <div class="space-y-4">
+                <input type="hidden" id="devolucaoId">
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Tipo de Devolução</label>
+                    <div class="flex space-x-4">
+                        <label class="flex items-center">
+                            <input type="radio" name="tipoDevolucao" value="total" checked class="mr-2" onchange="toggleValorDevolucao()">
+                            <span class="text-white">Total</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="tipoDevolucao" value="parcial" class="mr-2" onchange="toggleValorDevolucao()">
+                            <span class="text-white">Parcial</span>
+                        </label>
                     </div>
                 </div>
-                <div class="flex justify-end space-x-3 mt-4">
-                    <button onclick="fecharModalDevolucao()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition duration-200">
-                        Cancelar
-                    </button>
-                    <button onclick="confirmarDevolucao()" class="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg transition duration-200 flex items-center">
-                        <i class="fas fa-check mr-2"></i>Confirmar Devolução
-                    </button>
+                <div id="campoValorParcial" style="display: none;">
+                    <label class="block text-white text-sm font-medium mb-2">Valor Devolvido</label>
+                    <input type="text" id="valorDevolvido" class="input-modern w-full" oninput="formatarMoeda(this)" placeholder="0,00">
+                    <p class="text-gray-400 text-xs mt-1">O restante do valor continuará como pendente/pago</p>
                 </div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-4">
+                <button onclick="fecharModalDevolucao()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition duration-200">
+                    Cancelar
+                </button>
+                <button onclick="confirmarDevolucao()" class="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg transition duration-200 flex items-center">
+                    <i class="fas fa-check mr-2"></i>Confirmar Devolução
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Modal para reverter devolução -->
-    <div id="modalReverterDevolucao" class="fixed inset-0 z-50 hidden">
+    <!-- Modal Reverter Devolução -->
+    <div id="modalReverterDevolucao" class="fixed inset-0 z-50 hidden items-center justify-center">
         <div class="fixed inset-0 bg-black bg-opacity-70" onclick="fecharModalReverterDevolucao()"></div>
-        <div class="fixed inset-0 flex items-center justify-center p-4">
-            <div class="glass-effect rounded-2xl p-6 w-full max-w-md transform transition-all duration-300 scale-95 opacity-0" id="modalReverterContent">
-                <h3 class="text-xl font-bold text-white mb-4 flex items-center">
-                    <i class="fas fa-undo mr-2 text-blue-400"></i>
-                    Reverter Devolução
-                </h3>
-                <div class="mb-4">
-                    <p class="text-white">Cliente: <span id="reverterCliente" class="font-semibold"></span></p>
-                    <p class="text-white">Status atual: <span id="reverterStatus" class="font-semibold"></span></p>
-                </div>
-                <p class="text-yellow-300 mb-4 bg-yellow-500 bg-opacity-20 p-3 rounded-lg">
-                    <i class="fas fa-warning mr-2"></i>
-                    Esta ação irá remover a devolução e restaurar o status original da venda.
-                </p>
-                <input type="hidden" id="reverterId">
-                <div class="flex justify-end space-x-3 mt-4">
-                    <button onclick="fecharModalReverterDevolucao()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition duration-200">
-                        Cancelar
-                    </button>
-                    <button onclick="confirmarReverterDevolucao()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition duration-200 flex items-center">
-                        <i class="fas fa-undo mr-2"></i>Reverter Devolução
-                    </button>
-                </div>
+        <div class="relative glass-effect rounded-2xl p-6 w-full max-w-md transform transition-all duration-300 scale-95 opacity-0" id="modalReverterContent">
+            <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                <i class="fas fa-undo mr-2 text-blue-400"></i>
+                Reverter Devolução
+            </h3>
+            <div class="mb-4">
+                <p class="text-white">Cliente: <span id="reverterCliente" class="font-semibold"></span></p>
+                <p class="text-white">Status atual: <span id="reverterStatus" class="font-semibold"></span></p>
+            </div>
+            <p class="text-yellow-300 mb-4 bg-yellow-500 bg-opacity-20 p-3 rounded-lg">
+                <i class="fas fa-warning mr-2"></i>
+                Esta ação irá remover a devolução e restaurar o status original da venda.
+            </p>
+            <input type="hidden" id="reverterId">
+            <div class="flex justify-end space-x-3 mt-4">
+                <button onclick="fecharModalReverterDevolucao()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition duration-200">
+                    Cancelar
+                </button>
+                <button onclick="confirmarReverterDevolucao()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition duration-200 flex items-center">
+                    <i class="fas fa-undo mr-2"></i>Reverter Devolução
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Modal para limpar tudo -->
-    <div id="modalLimparTudo" class="fixed inset-0 z-50 hidden">
+    <!-- Modal Limpar Tudo -->
+    <div id="modalLimparTudo" class="fixed inset-0 z-50 hidden items-center justify-center">
         <div class="fixed inset-0 bg-black bg-opacity-70" onclick="fecharModalLimparTudo()"></div>
-        <div class="fixed inset-0 flex items-center justify-center p-4">
-            <div class="glass-effect rounded-2xl p-6 w-full max-w-md transform transition-all duration-300 scale-95 opacity-0" id="modalLimparContent">
-                <h3 class="text-xl font-bold text-white mb-4 flex items-center">
-                    <i class="fas fa-exclamation-triangle mr-2 text-red-400"></i>
-                    Limpar Todas as Vendas
-                </h3>
-                <div class="text-yellow-300 bg-yellow-500 bg-opacity-20 p-4 rounded-lg mb-4">
-                    <i class="fas fa-warning mr-2"></i>
-                    <strong>Atenção!</strong> Esta ação é irreversível.
-                </div>
-                <p class="text-white mb-4">
-                    Você está prestes a excluir <strong class="text-red-400">todas as <?= count($vendas) ?> vendas</strong> do sistema.<br>
-                    <span class="text-gray-400 text-sm">Total: R$ <?= number_format($total_geral, 2, ',', '.') ?></span>
-                </p>
-                <p class="text-gray-400 text-sm mb-4">
-                    Esta ação não pode ser desfeita. Certifique-se de que exportou o relatório antes de continuar.
-                </p>
-                <div class="flex justify-end space-x-3 mt-4">
-                    <button onclick="fecharModalLimparTudo()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition duration-200">
-                        Cancelar
-                    </button>
-                    <button onclick="confirmarLimparTudo()" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition duration-200 flex items-center">
-                        <i class="fas fa-trash-alt mr-2"></i>Sim, Limpar Tudo
-                    </button>
-                </div>
+        <div class="relative glass-effect rounded-2xl p-6 w-full max-w-md transform transition-all duration-300 scale-95 opacity-0" id="modalLimparContent">
+            <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                <i class="fas fa-exclamation-triangle mr-2 text-red-400"></i>
+                Limpar Todas as Vendas
+            </h3>
+            <div class="text-yellow-300 bg-yellow-500 bg-opacity-20 p-4 rounded-lg mb-4">
+                <i class="fas fa-warning mr-2"></i>
+                <strong>Atenção!</strong> Esta ação é irreversível.
+            </div>
+            <p class="text-white mb-4">
+                Você está prestes a excluir <strong class="text-red-400">todas as <?= count($vendas) ?> vendas</strong> do sistema.<br>
+                <span class="text-gray-400 text-sm">Total: R$ <?= number_format($total_geral, 2, ',', '.') ?></span>
+            </p>
+            <p class="text-gray-400 text-sm mb-4">
+                Esta ação não pode ser desfeita. Certifique-se de que exportou o relatório antes de continuar.
+            </p>
+            <div class="flex justify-end space-x-3 mt-4">
+                <button onclick="fecharModalLimparTudo()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition duration-200">
+                    Cancelar
+                </button>
+                <button onclick="confirmarLimparTudo()" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition duration-200 flex items-center">
+                    <i class="fas fa-trash-alt mr-2"></i>Sim, Limpar Tudo
+                </button>
             </div>
         </div>
     </div>
 
+    <!-- ========== MODAL FECHAR CAIXA ========== -->
+    <div id="modalFecharCaixa" class="fixed inset-0 z-50 hidden items-center justify-center">
+        <div class="fixed inset-0 bg-black bg-opacity-70" onclick="fecharModalFecharCaixa()"></div>
+        <div class="relative glass-effect rounded-2xl p-6 w-full max-w-lg transform transition-all duration-300 scale-95 opacity-0" id="modalFecharContent">
+            <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                <i class="fas fa-cash-register mr-2 text-pink-400"></i>
+                Fechamento de Caixa
+            </h3>
+            
+            <!-- Seção POS -->
+            <div class="mb-6 bg-gray-800 bg-opacity-30 p-4 rounded-xl">
+                <div class="flex items-center mb-3">
+                    <div class="w-8 h-8 rounded-full badge-pos flex items-center justify-center mr-3">
+                        <i class="fas fa-mobile-alt text-white text-sm"></i>
+                    </div>
+                    <h4 class="text-white font-semibold">POS (Uber / Motoboys)</h4>
+                </div>
+                <div class="flex justify-between items-center border-b border-gray-700 pb-2 mb-2">
+                    <span class="text-gray-300">Total POS</span>
+                    <span class="text-white font-bold" id="totalPOSModal">R$ 0,00</span>
+                </div>
+                <div id="listaMotoboysModal" class="space-y-1 text-sm">
+                    <!-- Lista de motoboys preenchida via JS -->
+                </div>
+            </div>
+
+            <!-- Seção Dinheiro + Devoluções -->
+      <!-- Seção Dinheiro + Devoluções -->
+<div class="mb-4 bg-gray-800 bg-opacity-30 p-4 rounded-xl">
+    <div class="flex items-center mb-3">
+        <div class="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center mr-3">
+            <i class="fas fa-money-bill-wave text-white text-sm"></i>
+        </div>
+        <h4 class="text-white font-semibold">Dinheiro em Caixa</h4>
+    </div>
+    <div class="flex justify-between items-center">
+        <span class="text-gray-300">Vendas em Dinheiro (pagas)</span>
+        <span class="text-white font-bold" id="totalDinheiroModal">R$ 0,00</span>
+    </div>
+    <div class="flex justify-between items-center mt-2">
+        <span class="text-gray-300">(+) Devoluções recebidas</span>
+        <span class="text-green-400 font-bold" id="totalDevolucoesModal">R$ 0,00</span>
+    </div>
+    <div class="flex justify-between items-center mt-3 pt-2 border-t border-gray-700">
+        <span class="text-white font-semibold">Saldo final em caixa</span>
+        <span class="text-green-400 font-bold text-lg" id="totalCaixaLiquido">R$ 0,00</span>
+    </div>
+    <p class="text-gray-400 text-xs mt-2">
+        <i class="fas fa-info-circle mr-1"></i> Devoluções (total ou parcial) entram no caixa como dinheiro.
+    </p>
+</div>
+
+            <div class="flex justify-end mt-4">
+                <button onclick="fecharModalFecharCaixa()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition duration-200">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== SCRIPT ========== -->
     <script>
     // Variáveis globais
     let currentObsId = null;
@@ -811,7 +916,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         });
     });
     
-    // Salvar nova ordem das vendas
+    // ---------- SALVAR ORDEM (CORRIGIDO) ----------
     function salvarOrdemVendas() {
         const rows = document.querySelectorAll('.sortable-row');
         const ordem = [];
@@ -824,16 +929,17 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         });
         
         $.ajax({
-            url: 'api_vendas.php',
+            url: 'salvar_ordem.php',
             method: 'POST',
             data: JSON.stringify({
                 action: 'salvar_ordem',
                 ordem: ordem
             }),
             contentType: 'application/json',
+            dataType: 'json',
             success: function(response) {
                 if (response.ok) {
-                    mostrarNotificacao('Ordem salva com sucesso!', 'success');
+                    mostrarNotificacao('', 'success');
                 } else {
                     mostrarNotificacao('Erro: ' + response.error, 'error');
                 }
@@ -867,24 +973,25 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                 fecharModalDevolucao();
                 fecharModalReverterDevolucao();
                 fecharModalLimparTudo();
+                fecharModalFecharCaixa();
             }
         });
     });
 
-    // Modal Observação
+    // ---------- Modal Observação ----------
     function abrirModalObs(id, obsAtual) {
         currentObsId = id;
         $('#obsId').val(id);
         $('#obsField').val(obsAtual || '');
         $('#modalObs').removeClass('hidden').addClass('flex');
         setTimeout(() => {
-            $('#modalContent').removeClass('scale-95 opacity-0').addClass('scale-100 opacity-100');
+            $('#modalObsContent').removeClass('scale-95 opacity-0').addClass('scale-100 opacity-100');
             $('#obsField').focus();
         }, 50);
     }
 
     function fecharModalObs() {
-        $('#modalContent').removeClass('scale-100 opacity-100').addClass('scale-95 opacity-0');
+        $('#modalObsContent').removeClass('scale-100 opacity-100').addClass('scale-95 opacity-0');
         setTimeout(() => {
             $('#modalObs').removeClass('flex').addClass('hidden');
         }, 300);
@@ -917,7 +1024,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         });
     }
 
-    // Modal Editar Venda
+    // ---------- Modal Editar Venda ----------
     function abrirModalEditar(btn) {
         currentEditarId = $(btn).data('id');
         $('#editarId').val(currentEditarId);
@@ -990,7 +1097,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
             });
     }
 
-    // Modal Devolução
+    // ---------- Modal Devolução ----------
     function abrirModalDevolucao(btn) {
         currentDevolucaoId = $(btn).data('id');
         $('#devolucaoId').val(currentDevolucaoId);
@@ -1045,7 +1152,6 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                 return;
             }
             
-            // Converter para número
             const valorDevolvidoNum = parseFloat(valorDevolvido.replace(',', '.'));
             if (isNaN(valorDevolvidoNum) || valorDevolvidoNum <= 0) {
                 alert('Valor devolvido inválido. Informe um número positivo.');
@@ -1090,7 +1196,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         });
     }
 
-    // Modal Reverter Devolução
+    // ---------- Modal Reverter Devolução ----------
     function abrirModalReverterDevolucao(btn) {
         currentReverterId = $(btn).data('id');
         $('#reverterId').val(currentReverterId);
@@ -1142,7 +1248,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         });
     }
 
-    // Modal Limpar Tudo
+    // ---------- Modal Limpar Tudo ----------
     function abrirModalLimparTudo() {
         $('#modalLimparTudo').removeClass('hidden').addClass('flex');
         setTimeout(() => {
@@ -1178,6 +1284,119 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
             });
     }
 
+    // ---------- 🔍 FILTRO DE CLIENTE E RESUMO ----------
+    $('#searchCliente').on('input', function() {
+        let termo = $(this).val().trim().toLowerCase();
+        let totalGasto = 0;
+        let pendentes = 0;
+        let linhasVisiveis = 0;
+
+        $('.venda-item').each(function() {
+            let cliente = $(this).data('cliente') || '';
+            let valor = parseFloat($(this).data('valor')) || 0;
+            let status = $(this).data('status');
+            let pago = $(this).data('pago') == 1;
+
+            if (termo === '') {
+                $(this).show();
+            } else {
+                if (cliente.includes(termo)) {
+                    $(this).show();
+                    if (status !== 'devolvido') {
+                        totalGasto += valor;
+                    }
+                    if (!pago && status !== 'devolvido') {
+                        pendentes++;
+                    }
+                    linhasVisiveis++;
+                } else {
+                    $(this).hide();
+                }
+            }
+        });
+
+        if (termo === '') {
+            $('#clienteSummaryCard').addClass('hidden');
+        } else {
+            $('#clienteNomePesquisado').text($('#searchCliente').val());
+            $('#clienteTotalGasto').text('R$ ' + totalGasto.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
+            $('#clientePendentes').text(pendentes);
+            $('#clienteSummaryCard').removeClass('hidden');
+        }
+    });
+
+ // ---------- 💰 MODAL FECHAR CAIXA (CORRIGIDO - CÁLCULO CORRETO) ----------
+function abrirModalFecharCaixa() {
+    let totalPOS = 0;
+    let totalDinheiroPago = 0;     // Vendas em dinheiro pagas
+    let totalDevolucoes = 0;       // Soma de todas as devoluções (total + parcial)
+    let motoboySoma = {};
+
+    $('.venda-item').each(function() {
+        let valor = parseFloat($(this).data('valor')) || 0;
+        let forma = $(this).data('forma') || '';
+        let motoboy = $(this).data('motoboy') || 'Balcão';
+        let status = $(this).data('status');
+        let pago = $(this).data('pago') == 1;
+        let valorDevolvido = parseFloat($(this).data('valor-devolvido')) || 0;
+
+        // ---- POS (apenas exibição, não entra no caixa) ----
+        if (motoboy.toLowerCase() !== 'balcão' && status !== 'devolvido') {
+            totalPOS += valor;
+            let chave = motoboy;
+            motoboySoma[chave] = (motoboySoma[chave] || 0) + valor;
+        }
+
+        // ---- DINHEIRO EM CAIXA (somente vendas pagas em dinheiro) ----
+        if (forma === 'Dinheiro' && status !== 'devolvido' && pago) {
+            totalDinheiroPago += valor;
+        }
+
+        // ---- DEVOLUÇÕES (tudo que foi devolvido, entra no caixa) ----
+        if (status === 'devolvido') {
+            totalDevolucoes += valor;               // devolução total
+        } else if (status === 'parcial') {
+            totalDevolucoes += valorDevolvido;      // devolução parcial
+        }
+    });
+
+    // Atualiza modal
+    $('#totalPOSModal').text('R$ ' + totalPOS.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
+
+    let htmlMotoboys = '';
+    let motoboysOrdenados = Object.keys(motoboySoma).sort();
+    motoboysOrdenados.forEach(moto => {
+        let valorFormatado = motoboySoma[moto].toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        htmlMotoboys += `<div class="flex justify-between items-center text-sm">
+            <span class="text-gray-300">${moto}</span>
+            <span class="text-white">R$ ${valorFormatado}</span>
+        </div>`;
+    });
+    $('#listaMotoboysModal').html(htmlMotoboys || '<div class="text-gray-500 text-sm">Nenhuma venda POS</div>');
+
+    // Exibe valores de dinheiro e devoluções
+    $('#totalDinheiroModal').text('R$ ' + totalDinheiroPago.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
+    $('#totalDevolucoesModal').text('R$ ' + totalDevolucoes.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
+
+    // SALDO FINAL = DINHEIRO + DEVOLUÇÕES
+    let saldoFinal = totalDinheiroPago + totalDevolucoes;
+    $('#totalCaixaLiquido').text('R$ ' + saldoFinal.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
+
+    // Abre modal
+    $('#modalFecharCaixa').removeClass('hidden').addClass('flex');
+    setTimeout(() => {
+        $('#modalFecharContent').removeClass('scale-95 opacity-0').addClass('scale-100 opacity-100');
+    }, 50);
+}
+
+    function fecharModalFecharCaixa() {
+        $('#modalFecharContent').removeClass('scale-100 opacity-100').addClass('scale-95 opacity-0');
+        setTimeout(() => {
+            $('#modalFecharCaixa').removeClass('flex').addClass('hidden');
+        }, 300);
+    }
+
+    // ---------- Notificações ----------
     function mostrarNotificacao(mensagem, tipo = 'info') {
         const tipos = {
             'success': {icon: 'fa-check-circle', color: 'bg-green-500'},

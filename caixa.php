@@ -52,6 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $motoboy_id = sanitizar($_POST['motoboy_id'] ?? '');
     $obs = sanitizar($_POST['obs'] ?? '');
     $autozoner_id = (int)($_POST['autozoner_id'] ?? 0);
+    // ⏰ Captura a data/hora enviada pelo cliente
+    $data_venda = $_POST['data_venda'] ?? date('Y-m-d H:i:s');
 
     // Calcular troco apenas se for dinheiro e valor pago > 0
     $troco = 0;
@@ -60,12 +62,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($troco < 0) $troco = 0;
     }
 
- // DEFINIÇÃO AUTOMÁTICA DA MÁQUINA
-if ($motoboy_id === '' || $motoboy_id === 'Balcão') {
-    $maquina = 'Maquina Balcao';
-} else {
-    $maquina = 'Maquina Movel';
-}
+    // DEFINIÇÃO AUTOMÁTICA DA MÁQUINA
+    if ($motoboy_id === '' || $motoboy_id === 'Balcão') {
+        $maquina = 'Maquina Balcao';
+    } else {
+        $maquina = 'Maquina Movel';
+    }
+
     // Validações
     if (empty($cliente)) $erros[] = "Cliente é obrigatório.";
     if ($valor <= 0) $erros[] = "Valor deve ser maior que zero.";
@@ -97,8 +100,9 @@ if ($motoboy_id === '' || $motoboy_id === 'Balcão') {
                 }
             }
 
-            $sql = "INSERT INTO vendas (cliente, valor_total, valor_pago, troco, forma_pagamento, motoboy, pago, usuario_id, numero_loja, autozoner_id, obs, maquina, status) 
-                    VALUES (:cliente, :valor, :valor_pago, :troco, :forma_pagamento, :motoboy, :pago, :usuario_id, :numero_loja, :autozoner_id, :obs, :maquina, 'normal')";
+            // 🕐 Incluímos a coluna `data_venda` no INSERT com o valor enviado pelo cliente
+            $sql = "INSERT INTO vendas (cliente, valor_total, valor_pago, troco, forma_pagamento, motoboy, pago, usuario_id, numero_loja, autozoner_id, obs, maquina, status, data_venda) 
+                    VALUES (:cliente, :valor, :valor_pago, :troco, :forma_pagamento, :motoboy, :pago, :usuario_id, :numero_loja, :autozoner_id, :obs, :maquina, 'normal', :data_venda)";
             
             $stmt = $pdo->prepare($sql);
             $result = $stmt->execute([
@@ -113,17 +117,13 @@ if ($motoboy_id === '' || $motoboy_id === 'Balcão') {
                 ':numero_loja' => $numero_loja,
                 ':autozoner_id' => $autozoner_id,
                 ':obs' => $obs,
-                ':maquina' => $maquina
+                ':maquina' => $maquina,
+                ':data_venda' => $data_venda  // ⏰ Data/hora do cliente
             ]);
             
             if ($result) {
                 $sucesso = "Venda registrada com sucesso!";
-                // Redirecionar para relatório após 1 segundo
-                echo '<script>
-                    setTimeout(function() {
-                        window.location.href = "relatorio.php";
-                    }, 1000);
-                </script>';
+                // ❌ Redirecionamento automático REMOVIDO – apenas mensagem de sucesso
             } else {
                 $erros[] = "Erro ao registrar venda. Tente novamente.";
             }
@@ -216,7 +216,7 @@ if ($motoboy_id === '' || $motoboy_id === 'Balcão') {
                         <i class="fas fa-check-circle mr-3 text-xl"></i>
                         <div>
                             <p class="font-semibold"><?= htmlspecialchars($sucesso) ?></p>
-                            <p class="text-sm opacity-90 mt-1">Redirecionando para relatórios...</p>
+                            <!-- Mensagem de redirecionamento removida -->
                         </div>
                     </div>
                 </div>
@@ -244,6 +244,9 @@ if ($motoboy_id === '' || $motoboy_id === 'Balcão') {
                 </h2>
 
                 <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-6" id="formVenda">
+                    <!-- ⏰ Campo oculto que receberá a data/hora do computador do cliente -->
+                    <input type="hidden" name="data_venda" id="data_venda">
+
                     <!-- Coluna 1 -->
                     <div class="space-y-4">
                         <!-- Cliente -->
@@ -432,50 +435,49 @@ if ($motoboy_id === '' || $motoboy_id === 'Balcão') {
     </div>
 
     <script>
-        // Variáveis globais
-        let selecionadoIndex = -1;
-        let debounceTimer;
-        
-        // Função para formatar moeda (esquerda para direita)
+        // ========================
+        // ⏰ DATA/HORA DO CLIENTE
+        // ========================
+        function setDataVenda() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const formatted = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            document.getElementById('data_venda').value = formatted;
+        }
+
+        // Atualiza o campo oculto ao carregar e antes de enviar
+        document.addEventListener('DOMContentLoaded', setDataVenda);
+        document.getElementById('formVenda').addEventListener('submit', setDataVenda);
+
+        // ========================
+        // 💰 FUNÇÕES DE MOEDA E TROCO
+        // ========================
         function formatarMoeda(input) {
-            // Remove tudo que não é dígito
             let valor = input.value.replace(/\D/g, '');
-            
-            // Se vazio, mostra placeholder
             if (valor === '') {
                 input.value = '';
                 return;
             }
-            
-            // Formata como centavos
             valor = (parseInt(valor) / 100).toFixed(2);
-            
-            // Formata com separadores de milhar
             let partes = valor.split('.');
             partes[0] = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-            
             input.value = partes.join(',');
         }
 
-        // Função para calcular troco
         function calcularTroco() {
             const formaPagamento = document.getElementById('forma_pagamento').value;
-            
             if (formaPagamento === 'Dinheiro') {
                 const valorInput = document.getElementById('valor').value;
                 const valorPagoInput = document.getElementById('valor_pago').value;
-                
                 const valor = parseFloat(valorInput.replace(/\./g, '').replace(',', '.')) || 0;
                 const valorPago = parseFloat(valorPagoInput.replace(/\./g, '').replace(',', '.')) || 0;
-                
-                let troco = 0;
-                if (valorPago > valor) {
-                    troco = valorPago - valor;
-                }
-                
+                let troco = valorPago > valor ? valorPago - valor : 0;
                 document.getElementById('troco_display').textContent = 'R$ ' + troco.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-                
-                // Efeito visual no troco
                 const trocoDisplay = document.getElementById('troco_display');
                 if (troco > 0) {
                     trocoDisplay.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
@@ -485,50 +487,44 @@ if ($motoboy_id === '' || $motoboy_id === 'Balcão') {
             }
         }
 
-        // Função para mostrar/ocultar campos de dinheiro
         function toggleCamposDinheiro() {
             const formaPagamento = document.getElementById('forma_pagamento').value;
             const camposDinheiro = document.getElementById('campos_dinheiro');
-            
             if (formaPagamento === 'Dinheiro') {
                 camposDinheiro.style.display = 'block';
-                // Focar no campo valor pago quando aparecer
-                setTimeout(() => {
-                    document.getElementById('valor_pago').focus();
-                }, 300);
+                setTimeout(() => document.getElementById('valor_pago').focus(), 300);
             } else {
                 camposDinheiro.style.display = 'none';
                 document.getElementById('valor_pago').value = '';
                 document.getElementById('troco_display').textContent = 'R$ 0,00';
                 document.getElementById('troco_display').style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
             }
-            
             calcularTroco();
         }
 
-        // Sistema de busca de clientes
+        // ========================
+        // 🔍 BUSCA DE CLIENTES (sugestões)
+        // ========================
+        let selecionadoIndex = -1;
+        let debounceTimer;
         const clienteInput = document.getElementById('cliente');
         const listaClientes = document.getElementById('listaClientes');
 
         clienteInput.addEventListener('input', () => {
             clearTimeout(debounceTimer);
             const termo = clienteInput.value.trim();
-
             if (termo.length < 2) {
                 listaClientes.classList.add('hidden');
                 return;
             }
-
             debounceTimer = setTimeout(async () => {
                 try {
                     const res = await fetch(`buscar_clientes.php?q=${encodeURIComponent(termo)}&loja=<?= $numero_loja ?>`);
                     const clientes = await res.json();
-
                     if (clientes.length === 0) {
                         listaClientes.classList.add('hidden');
                         return;
                     }
-
                     listaClientes.innerHTML = '';
                     clientes.forEach((nome, i) => {
                         const li = document.createElement('li');
@@ -537,7 +533,6 @@ if ($motoboy_id === '' || $motoboy_id === 'Balcão') {
                         li.onclick = () => selecionarCliente(nome);
                         listaClientes.appendChild(li);
                     });
-
                     selecionadoIndex = -1;
                     listaClientes.classList.remove('hidden');
                 } catch (error) {
@@ -548,43 +543,36 @@ if ($motoboy_id === '' || $motoboy_id === 'Balcão') {
 
         clienteInput.addEventListener('keydown', (e) => {
             const itens = listaClientes.querySelectorAll('li');
-            if (listaClientes.classList.contains('hidden') || itens.length === 0) return;
-
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                selecionadoIndex = (selecionadoIndex + 1) % itens.length;
-                updateSelection(itens);
-            }
-
-            if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                selecionadoIndex = (selecionadoIndex - 1 + itens.length) % itens.length;
-                updateSelection(itens);
-            }
-
-            if (e.key === 'Enter') {
-                if (selecionadoIndex >= 0) {
+            if (!listaClientes.classList.contains('hidden') && itens.length > 0) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selecionadoIndex = (selecionadoIndex + 1) % itens.length;
+                    itens.forEach((item, i) => {
+                        item.classList.toggle('bg-purple-600', i === selecionadoIndex);
+                        item.classList.toggle('text-white', i === selecionadoIndex);
+                    });
+                }
+                if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selecionadoIndex = (selecionadoIndex - 1 + itens.length) % itens.length;
+                    itens.forEach((item, i) => {
+                        item.classList.toggle('bg-purple-600', i === selecionadoIndex);
+                        item.classList.toggle('text-white', i === selecionadoIndex);
+                    });
+                }
+                if (e.key === 'Enter' && selecionadoIndex >= 0) {
                     e.preventDefault();
                     selecionarCliente(itens[selecionadoIndex].textContent);
                 }
-            }
-
-            if (e.key === 'Escape') {
-                listaClientes.classList.add('hidden');
+                if (e.key === 'Escape') {
+                    listaClientes.classList.add('hidden');
+                }
             }
         });
-
-        function updateSelection(itens) {
-            itens.forEach((item, i) => {
-                item.classList.toggle('bg-purple-600', i === selecionadoIndex);
-                item.classList.toggle('text-white', i === selecionadoIndex);
-            });
-        }
 
         function selecionarCliente(nome) {
             clienteInput.value = nome;
             listaClientes.classList.add('hidden');
-            // Foca no próximo campo
             document.getElementById('valor').focus();
         }
 
@@ -594,69 +582,22 @@ if ($motoboy_id === '' || $motoboy_id === 'Balcão') {
             }
         });
 
-        // Sistema de navegação com ENTER
-        const campos = ['cliente', 'valor', 'forma_pagamento', 'valor_pago', 'autozoner_id', 'motoboy_id', 'obs'];
-        
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                
-                const campoAtual = document.activeElement;
-                const campoAtualId = campoAtual.id;
-                const campoAtualValue = campoAtual.value.trim();
-                
-                // ⚠️ Bloquear ENTER se campo obrigatório estiver vazio
-                if (campoAtual.required && !campoAtualValue) {
-                    campoAtual.focus();
-                    return;
-                }
-                
-                // Encontrar índice do campo atual
-                const indexAtual = campos.indexOf(campoAtualId);
-                
-                if (indexAtual !== -1) {
-                    // 🚀 ENTER no último campo = salvar direto
-                    if (indexAtual === campos.length - 1) {
-                        if (validarFormulario()) {
-                            document.getElementById('formVenda').submit();
-                        }
-                    } else {
-                        // Avançar para próximo campo
-                        const proximoCampoId = campos[indexAtual + 1];
-                        const proximoCampo = document.getElementById(proximoCampoId);
-                        
-                        if (proximoCampo) {
-                            // Se for select, focar e abrir
-                            if (proximoCampo.tagName === 'SELECT') {
-                                proximoCampo.focus();
-                                proximoCampo.size = 1; // Forçar abertura
-                                setTimeout(() => {
-                                    proximoCampo.size = 0;
-                                }, 300);
-                            } else {
-                                proximoCampo.focus();
-                                // Selecionar todo texto em campos de valor
-                                if (proximoCampoId === 'valor' || proximoCampoId === 'valor_pago') {
-                                    proximoCampo.select();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            
-            // Tecla ESC fecha sugestões
-            if (e.key === 'Escape') {
-                listaClientes.classList.add('hidden');
-            }
-        });
+        // ========================
+        // ⌨️ NAVEGAÇÃO SEQUENCIAL COM ENTER (APENAS CAMPOS VISÍVEIS)
+        // ========================
+        function getCamposVisiveis() {
+            const form = document.getElementById('formVenda');
+            const campos = form.querySelectorAll('input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled])');
+            return Array.from(campos).filter(campo => {
+                // Verifica se o campo está visível (offsetParent !== null)
+                return campo.offsetParent !== null;
+            });
+        }
 
-        // Validação do formulário
         function validarFormulario() {
             const formaPagamento = document.getElementById('forma_pagamento').value;
             const valorInput = document.getElementById('valor').value;
             const valorPagoInput = document.getElementById('valor_pago').value;
-            
             const valor = parseFloat(valorInput.replace(/\./g, '').replace(',', '.')) || 0;
             const valorPago = parseFloat(valorPagoInput.replace(/\./g, '').replace(',', '.')) || 0;
             
@@ -665,43 +606,77 @@ if ($motoboy_id === '' || $motoboy_id === 'Balcão') {
                 document.getElementById('valor_pago').focus();
                 return false;
             }
-            
             if (document.getElementById('cliente').value.trim() === '') {
                 alert('❌ Preencha o nome do cliente.');
                 document.getElementById('cliente').focus();
                 return false;
             }
-            
             if (valor <= 0) {
                 alert('❌ O valor da venda deve ser maior que zero.');
                 document.getElementById('valor').focus();
                 return false;
             }
-            
             return true;
         }
 
-        // Inicializar campos ao carregar a página
+        document.addEventListener('keydown', function(e) {
+            // Ignora se estiver usando sugestões (já tratado)
+            if (e.target === clienteInput && !listaClientes.classList.contains('hidden')) {
+                return; // O próprio evento do clienteInput cuida disso
+            }
+
+            if (e.key === 'Enter') {
+                const campoAtual = e.target;
+                e.preventDefault();
+
+                // Se o campo atual for obrigatório e estiver vazio, não avança
+                if (campoAtual.required && campoAtual.value.trim() === '') {
+                    campoAtual.focus();
+                    return;
+                }
+
+                const camposVisiveis = getCamposVisiveis();
+                const indexAtual = camposVisiveis.indexOf(campoAtual);
+                
+                if (indexAtual !== -1) {
+                    if (indexAtual === camposVisiveis.length - 1) {
+                        // Último campo → submeter se válido
+                        if (validarFormulario()) {
+                            document.getElementById('formVenda').submit();
+                        }
+                    } else {
+                        // Avança para o próximo campo visível
+                        const proximoCampo = camposVisiveis[indexAtual + 1];
+                        if (proximoCampo) {
+                            proximoCampo.focus();
+                            // Seleciona todo o texto se for campo de moeda
+                            if (proximoCampo.id === 'valor' || proximoCampo.id === 'valor_pago') {
+                                proximoCampo.select();
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ESC fecha sugestões
+            if (e.key === 'Escape') {
+                listaClientes.classList.add('hidden');
+            }
+        });
+
+        // Inicialização
         document.addEventListener('DOMContentLoaded', function() {
             toggleCamposDinheiro();
-            
-            // Aplicar formatação inicial se houver valores
             const valorInput = document.getElementById('valor');
-            if (valorInput.value) {
-                formatarMoeda(valorInput);
-            }
-            
+            if (valorInput.value) formatarMoeda(valorInput);
             const valorPagoInput = document.getElementById('valor_pago');
-            if (valorPagoInput.value) {
-                formatarMoeda(valorPagoInput);
-            }
-            
-            // Focar no campo cliente
+            if (valorPagoInput.value) formatarMoeda(valorPagoInput);
             document.getElementById('cliente').focus();
         });
 
-        // Validar formulário antes de enviar
+        // Validação extra no submit
         document.getElementById('formVenda').addEventListener('submit', function(e) {
+            setDataVenda(); // Garante data/hora atualizada
             if (!validarFormulario()) {
                 e.preventDefault();
                 return false;
