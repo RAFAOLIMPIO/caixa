@@ -51,13 +51,13 @@ $total_vendas = 0;
 $total_pago = 0;
 $total_pendente = 0;
 $total_devolvido = 0;
-$total_parcial = 0;
 $total_pos = 0;
+$total_pos_receber = 0;
 $total_balcao = 0;
 $total_pos_pendente = 0;
 
 foreach ($vendas as $v) {
-    $valor = (float)$v['valor_total'];
+    $valor_total = (float)$v['valor_total'];
     $status = $v['status'] ?? 'normal';
     $motoboy = strtolower(trim($v['motoboy'] ?? ''));
     $pago = isset($v['pago']) && ($v['pago'] == true || $v['pago'] == 1);
@@ -65,7 +65,7 @@ foreach ($vendas as $v) {
     $is_pos = ($motoboy !== 'balcão');
 
     if ($status === 'devolvido') {
-        $total_devolvido += $valor;
+        $total_devolvido += $valor_total;
     } elseif ($status === 'parcial') {
         $valor_devolvido = (float)$v['valor_devolvido'];
         $total_parcial += $valor_devolvido;
@@ -236,6 +236,9 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         .badge-pos {
             background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
         }
+        .badge-pos-pendente {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
         .badge-balcao {
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         }
@@ -353,10 +356,11 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                 <div class="w-10 h-10 mx-auto mb-2 badge-total rounded-full flex items-center justify-center">
                     <i class="fas fa-shopping-cart text-white text-lg"></i>
                 </div>
-                <h3 class="text-gray-400 text-xs mb-1">Total Vendas</h3>
-                <p class="text-lg font-bold text-white">R$ <?= number_format($total_vendas, 2, ',', '.') ?></p>
+                <h3 class="text-gray-400 text-xs mb-1">Vendas Lançadas</h3>
+                <p class="text-lg font-bold text-white">R$ <?= number_format($total_lancadas, 2, ',', '.') ?></p>
             </div>
 
+            <!-- 2. Vendas Pagas -->
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.1s">
                 <div class="w-10 h-10 mx-auto mb-2 badge-pago rounded-full flex items-center justify-center">
                     <i class="fas fa-check-circle text-white text-lg"></i>
@@ -365,6 +369,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                 <p class="text-lg font-bold text-white">R$ <?= number_format($total_pago, 2, ',', '.') ?></p>
             </div>
 
+            <!-- 3. A Receber (Tudo que não foi pago) -->
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.2s">
                 <div class="w-10 h-10 mx-auto mb-2 badge-pendente rounded-full flex items-center justify-center">
                     <i class="fas fa-clock text-white text-lg"></i>
@@ -373,12 +378,13 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                 <p class="text-lg font-bold text-white">R$ <?= number_format($total_pendente, 2, ',', '.') ?></p>
             </div>
 
+            <!-- 4. Devoluções -->
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.3s">
                 <div class="w-10 h-10 mx-auto mb-2 badge-devolucao rounded-full flex items-center justify-center">
                     <i class="fas fa-exchange-alt text-white text-lg"></i>
                 </div>
                 <h3 class="text-gray-400 text-xs mb-1">Devoluções</h3>
-                <p class="text-lg font-bold text-white">R$ <?= number_format($total_devolvido + $total_parcial, 2, ',', '.') ?></p>
+                <p class="text-lg font-bold text-white">R$ <?= number_format($total_devolvido, 2, ',', '.') ?></p>
             </div>
 
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.4s">
@@ -390,6 +396,15 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
             </div>
 
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.5s">
+                <div class="w-10 h-10 mx-auto mb-2 badge-pos-pendente rounded-full flex items-center justify-center">
+                    <i class="fas fa-hourglass-half text-white text-lg"></i>
+                </div>
+                <h3 class="text-gray-400 text-xs mb-1">Receber POS</h3>
+                <p class="text-lg font-bold text-white">R$ <?= number_format($total_pos_receber, 2, ',', '.') ?></p>
+            </div>
+
+            <!-- 7. Balcão -->
+            <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.6s">
                 <div class="w-10 h-10 mx-auto mb-2 badge-balcao rounded-full flex items-center justify-center">
                     <i class="fas fa-store text-white text-lg"></i>
                 </div>
@@ -406,7 +421,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
             </div>
         </div>
 
-        <!-- Tabela de Vendas -->
+        <!-- Tabela de Vendas (exibindo DATA e HORA exatos) -->
         <div class="glass-effect rounded-2xl overflow-hidden fade-in-up" style="animation-delay: 0.3s">
             <div class="p-4 border-b border-gray-700">
                 <div class="flex items-center justify-between">

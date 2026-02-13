@@ -11,10 +11,8 @@ $numero_loja = $usuario['numero_loja'];
 $sucesso = '';
 $erros = [];
 
-
 // Buscar autozoners e motoboys
 try {
-    // Autozoners - usando numero_loja
     $stmtAuto = $pdo->prepare("
         SELECT id, nome 
         FROM funcionarios 
@@ -26,7 +24,6 @@ try {
     $stmtAuto->execute([$numero_loja]);
     $autozoners = $stmtAuto->fetchAll();
     
-    // Motoboys - usando numero_loja
     $stmtMoto = $pdo->prepare("
         SELECT id, nome 
         FROM funcionarios 
@@ -76,8 +73,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($forma_pagamento === 'Dinheiro' && $valor_pago < $valor) {
         $erros[] = "Valor pago não pode ser menor que o valor da venda.";
     }
-
-    // Verificar se existe pelo menos um autozoner cadastrado
     if (empty($autozoners)) {
         $erros[] = "É necessário cadastrar pelo menos um autozoner antes de registrar vendas.";
     }
@@ -129,7 +124,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
         } catch (PDOException $e) {
-            // Tratamento mais específico de erros
             if (strpos($e->getMessage(), 'foreign key') !== false) {
                 $erros[] = "Erro: Autozoner inválido. Verifique se o autozoner selecionado existe.";
             } else if (strpos($e->getMessage(), 'null value') !== false) {
@@ -142,7 +136,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -509,6 +502,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         let debounceTimer;
         const clienteInput = document.getElementById('cliente');
         const listaClientes = document.getElementById('listaClientes');
+        let debounceTimer;
+        let selecionadoIndex = -1;
 
         clienteInput.addEventListener('input', () => {
             clearTimeout(debounceTimer);
