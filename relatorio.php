@@ -1,5 +1,5 @@
 <?php
-// relatorio.php - VERSÃO COMPLETA COM PESQUISA DE CLIENTE + FECHAMENTO DE CAIXA
+// relatorio.php - VERSÃO COMPLETA E CORRIGIDA
 require_once __DIR__ . '/includes/config.php';
 
 if (!isset($_SESSION['usuario'])) {
@@ -51,13 +51,13 @@ $total_vendas = 0;
 $total_pago = 0;
 $total_pendente = 0;
 $total_devolvido = 0;
+$total_parcial = 0;
 $total_pos = 0;
-$total_pos_receber = 0;
 $total_balcao = 0;
 $total_pos_pendente = 0;
 
 foreach ($vendas as $v) {
-    $valor_total = (float)$v['valor_total'];
+    $valor = (float)$v['valor_total'];
     $status = $v['status'] ?? 'normal';
     $motoboy = strtolower(trim($v['motoboy'] ?? ''));
     $pago = isset($v['pago']) && ($v['pago'] == true || $v['pago'] == 1);
@@ -65,7 +65,7 @@ foreach ($vendas as $v) {
     $is_pos = ($motoboy !== 'balcão');
 
     if ($status === 'devolvido') {
-        $total_devolvido += $valor_total;
+        $total_devolvido += $valor;
     } elseif ($status === 'parcial') {
         $valor_devolvido = (float)$v['valor_devolvido'];
         $total_parcial += $valor_devolvido;
@@ -236,9 +236,6 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         .badge-pos {
             background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
         }
-        .badge-pos-pendente {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        }
         .badge-balcao {
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         }
@@ -356,11 +353,10 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                 <div class="w-10 h-10 mx-auto mb-2 badge-total rounded-full flex items-center justify-center">
                     <i class="fas fa-shopping-cart text-white text-lg"></i>
                 </div>
-                <h3 class="text-gray-400 text-xs mb-1">Vendas Lançadas</h3>
-                <p class="text-lg font-bold text-white">R$ <?= number_format($total_lancadas, 2, ',', '.') ?></p>
+                <h3 class="text-gray-400 text-xs mb-1">Total Vendas</h3>
+                <p class="text-lg font-bold text-white">R$ <?= number_format($total_vendas, 2, ',', '.') ?></p>
             </div>
 
-            <!-- 2. Vendas Pagas -->
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.1s">
                 <div class="w-10 h-10 mx-auto mb-2 badge-pago rounded-full flex items-center justify-center">
                     <i class="fas fa-check-circle text-white text-lg"></i>
@@ -369,7 +365,6 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                 <p class="text-lg font-bold text-white">R$ <?= number_format($total_pago, 2, ',', '.') ?></p>
             </div>
 
-            <!-- 3. A Receber (Tudo que não foi pago) -->
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.2s">
                 <div class="w-10 h-10 mx-auto mb-2 badge-pendente rounded-full flex items-center justify-center">
                     <i class="fas fa-clock text-white text-lg"></i>
@@ -378,13 +373,12 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                 <p class="text-lg font-bold text-white">R$ <?= number_format($total_pendente, 2, ',', '.') ?></p>
             </div>
 
-            <!-- 4. Devoluções -->
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.3s">
                 <div class="w-10 h-10 mx-auto mb-2 badge-devolucao rounded-full flex items-center justify-center">
                     <i class="fas fa-exchange-alt text-white text-lg"></i>
                 </div>
                 <h3 class="text-gray-400 text-xs mb-1">Devoluções</h3>
-                <p class="text-lg font-bold text-white">R$ <?= number_format($total_devolvido, 2, ',', '.') ?></p>
+                <p class="text-lg font-bold text-white">R$ <?= number_format($total_devolvido + $total_parcial, 2, ',', '.') ?></p>
             </div>
 
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.4s">
@@ -396,15 +390,6 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
             </div>
 
             <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.5s">
-                <div class="w-10 h-10 mx-auto mb-2 badge-pos-pendente rounded-full flex items-center justify-center">
-                    <i class="fas fa-hourglass-half text-white text-lg"></i>
-                </div>
-                <h3 class="text-gray-400 text-xs mb-1">Receber POS</h3>
-                <p class="text-lg font-bold text-white">R$ <?= number_format($total_pos_receber, 2, ',', '.') ?></p>
-            </div>
-
-            <!-- 7. Balcão -->
-            <div class="glass-effect p-4 rounded-2xl text-center fade-in-up" style="animation-delay: 0.6s">
                 <div class="w-10 h-10 mx-auto mb-2 badge-balcao rounded-full flex items-center justify-center">
                     <i class="fas fa-store text-white text-lg"></i>
                 </div>
@@ -421,7 +406,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
             </div>
         </div>
 
-        <!-- Tabela de Vendas (exibindo DATA e HORA exatos) -->
+        <!-- Tabela de Vendas -->
         <div class="glass-effect rounded-2xl overflow-hidden fade-in-up" style="animation-delay: 0.3s">
             <div class="p-4 border-b border-gray-700">
                 <div class="flex items-center justify-between">
@@ -790,7 +775,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         </div>
     </div>
 
-    <!-- ========== MODAL FECHAR CAIXA ========== -->
+    <!-- ========== MODAL FECHAR CAIXA (CORRIGIDO) ========== -->
     <div id="modalFecharCaixa" class="fixed inset-0 z-50 hidden items-center justify-center">
         <div class="fixed inset-0 bg-black bg-opacity-70" onclick="fecharModalFecharCaixa()"></div>
         <div class="relative glass-effect rounded-2xl p-6 w-full max-w-lg transform transition-all duration-300 scale-95 opacity-0" id="modalFecharContent">
@@ -799,7 +784,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                 Fechamento de Caixa
             </h3>
             
-            <!-- Seção POS -->
+            <!-- Seção POS (apenas consulta) -->
             <div class="mb-6 bg-gray-800 bg-opacity-30 p-4 rounded-xl">
                 <div class="flex items-center mb-3">
                     <div class="w-8 h-8 rounded-full badge-pos flex items-center justify-center mr-3">
@@ -812,35 +797,34 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                     <span class="text-white font-bold" id="totalPOSModal">R$ 0,00</span>
                 </div>
                 <div id="listaMotoboysModal" class="space-y-1 text-sm">
-                    <!-- Lista de motoboys preenchida via JS -->
+                    <!-- Lista preenchida via JS -->
                 </div>
             </div>
 
-            <!-- Seção Dinheiro + Devoluções -->
-      <!-- Seção Dinheiro + Devoluções -->
-<div class="mb-4 bg-gray-800 bg-opacity-30 p-4 rounded-xl">
-    <div class="flex items-center mb-3">
-        <div class="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center mr-3">
-            <i class="fas fa-money-bill-wave text-white text-sm"></i>
-        </div>
-        <h4 class="text-white font-semibold">Dinheiro em Caixa</h4>
-    </div>
-    <div class="flex justify-between items-center">
-        <span class="text-gray-300">Vendas em Dinheiro (pagas)</span>
-        <span class="text-white font-bold" id="totalDinheiroModal">R$ 0,00</span>
-    </div>
-    <div class="flex justify-between items-center mt-2">
-        <span class="text-gray-300">(+) Devoluções recebidas</span>
-        <span class="text-green-400 font-bold" id="totalDevolucoesModal">R$ 0,00</span>
-    </div>
-    <div class="flex justify-between items-center mt-3 pt-2 border-t border-gray-700">
-        <span class="text-white font-semibold">Saldo final em caixa</span>
-        <span class="text-green-400 font-bold text-lg" id="totalCaixaLiquido">R$ 0,00</span>
-    </div>
-    <p class="text-gray-400 text-xs mt-2">
-        <i class="fas fa-info-circle mr-1"></i> Devoluções (total ou parcial) entram no caixa como dinheiro.
-    </p>
-</div>
+            <!-- Seção Dinheiro + Devoluções (CÁLCULO CORRETO) -->
+            <div class="mb-4 bg-gray-800 bg-opacity-30 p-4 rounded-xl">
+                <div class="flex items-center mb-3">
+                    <div class="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center mr-3">
+                        <i class="fas fa-money-bill-wave text-white text-sm"></i>
+                    </div>
+                    <h4 class="text-white font-semibold">Dinheiro em Caixa</h4>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-300">Vendas em Dinheiro (pagas)</span>
+                    <span class="text-white font-bold" id="totalDinheiroModal">R$ 0,00</span>
+                </div>
+                <div class="flex justify-between items-center mt-2">
+                    <span class="text-gray-300">(+) Devoluções recebidas</span>
+                    <span class="text-green-400 font-bold" id="totalDevolucoesModal">R$ 0,00</span>
+                </div>
+                <div class="flex justify-between items-center mt-3 pt-2 border-t border-gray-700">
+                    <span class="text-white font-semibold">Saldo final em caixa</span>
+                    <span class="text-green-400 font-bold text-lg" id="totalCaixaLiquido">R$ 0,00</span>
+                </div>
+                <p class="text-gray-400 text-xs mt-2">
+                    <i class="fas fa-info-circle mr-1"></i> Devoluções (total ou parcial) são ressarcidas em dinheiro e entram no caixa.
+                </p>
+            </div>
 
             <div class="flex justify-end mt-4">
                 <button onclick="fecharModalFecharCaixa()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition duration-200">
@@ -931,7 +915,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         });
     });
     
-    // ---------- SALVAR ORDEM (CORRIGIDO) ----------
+    // ---------- SALVAR ORDEM (VIA salvar_ordem.php) ----------
     function salvarOrdemVendas() {
         const rows = document.querySelectorAll('.sortable-row');
         const ordem = [];
@@ -944,7 +928,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         });
         
         $.ajax({
-            url: 'salvar_ordem.php',
+            url: 'salvar_ordem.php',   // ✅ Endpoint separado
             method: 'POST',
             data: JSON.stringify({
                 action: 'salvar_ordem',
@@ -954,7 +938,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
             dataType: 'json',
             success: function(response) {
                 if (response.ok) {
-                    mostrarNotificacao('', 'success');
+                    mostrarNotificacao('Ordem salva com sucesso!', 'success');
                 } else {
                     mostrarNotificacao('Erro: ' + response.error, 'error');
                 }
@@ -1304,7 +1288,6 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         let termo = $(this).val().trim().toLowerCase();
         let totalGasto = 0;
         let pendentes = 0;
-        let linhasVisiveis = 0;
 
         $('.venda-item').each(function() {
             let cliente = $(this).data('cliente') || '';
@@ -1323,7 +1306,6 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                     if (!pago && status !== 'devolvido') {
                         pendentes++;
                     }
-                    linhasVisiveis++;
                 } else {
                     $(this).hide();
                 }
@@ -1340,69 +1322,68 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         }
     });
 
- // ---------- 💰 MODAL FECHAR CAIXA (CORRIGIDO - CÁLCULO CORRETO) ----------
-function abrirModalFecharCaixa() {
-    let totalPOS = 0;
-    let totalDinheiroPago = 0;     // Vendas em dinheiro pagas
-    let totalDevolucoes = 0;       // Soma de todas as devoluções (total + parcial)
-    let motoboySoma = {};
+    // ---------- 💰 MODAL FECHAR CAIXA (CÁLCULO CORRETO) ----------
+    function abrirModalFecharCaixa() {
+        let totalPOS = 0;
+        let totalDinheiroPago = 0;
+        let totalDevolucoes = 0;
+        let motoboySoma = {};
 
-    $('.venda-item').each(function() {
-        let valor = parseFloat($(this).data('valor')) || 0;
-        let forma = $(this).data('forma') || '';
-        let motoboy = $(this).data('motoboy') || 'Balcão';
-        let status = $(this).data('status');
-        let pago = $(this).data('pago') == 1;
-        let valorDevolvido = parseFloat($(this).data('valor-devolvido')) || 0;
+        $('.venda-item').each(function() {
+            let valor = parseFloat($(this).data('valor')) || 0;
+            let forma = $(this).data('forma') || '';
+            let motoboy = $(this).data('motoboy') || 'Balcão';
+            let status = $(this).data('status');
+            let pago = $(this).data('pago') == 1;
+            let valorDevolvido = parseFloat($(this).data('valor-devolvido')) || 0;
 
-        // ---- POS (apenas exibição, não entra no caixa) ----
-        if (motoboy.toLowerCase() !== 'balcão' && status !== 'devolvido') {
-            totalPOS += valor;
-            let chave = motoboy;
-            motoboySoma[chave] = (motoboySoma[chave] || 0) + valor;
-        }
+            // ---- POS (apenas exibição) ----
+            if (motoboy.toLowerCase() !== 'balcão' && status !== 'devolvido') {
+                totalPOS += valor;
+                let chave = motoboy;
+                motoboySoma[chave] = (motoboySoma[chave] || 0) + valor;
+            }
 
-        // ---- DINHEIRO EM CAIXA (somente vendas pagas em dinheiro) ----
-        if (forma === 'Dinheiro' && status !== 'devolvido' && pago) {
-            totalDinheiroPago += valor;
-        }
+            // ---- DINHEIRO EM CAIXA (somente vendas pagas em dinheiro) ----
+            if (forma === 'Dinheiro' && status !== 'devolvido' && pago) {
+                totalDinheiroPago += valor;
+            }
 
-        // ---- DEVOLUÇÕES (tudo que foi devolvido, entra no caixa) ----
-        if (status === 'devolvido') {
-            totalDevolucoes += valor;               // devolução total
-        } else if (status === 'parcial') {
-            totalDevolucoes += valorDevolvido;      // devolução parcial
-        }
-    });
+            // ---- DEVOLUÇÕES (total ou parcial) ----
+            if (status === 'devolvido') {
+                totalDevolucoes += valor;
+            } else if (status === 'parcial') {
+                totalDevolucoes += valorDevolvido;
+            }
+        });
 
-    // Atualiza modal
-    $('#totalPOSModal').text('R$ ' + totalPOS.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
+        // Atualiza modal
+        $('#totalPOSModal').text('R$ ' + totalPOS.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
 
-    let htmlMotoboys = '';
-    let motoboysOrdenados = Object.keys(motoboySoma).sort();
-    motoboysOrdenados.forEach(moto => {
-        let valorFormatado = motoboySoma[moto].toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        htmlMotoboys += `<div class="flex justify-between items-center text-sm">
-            <span class="text-gray-300">${moto}</span>
-            <span class="text-white">R$ ${valorFormatado}</span>
-        </div>`;
-    });
-    $('#listaMotoboysModal').html(htmlMotoboys || '<div class="text-gray-500 text-sm">Nenhuma venda POS</div>');
+        let htmlMotoboys = '';
+        let motoboysOrdenados = Object.keys(motoboySoma).sort();
+        motoboysOrdenados.forEach(moto => {
+            let valorFormatado = motoboySoma[moto].toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            htmlMotoboys += `<div class="flex justify-between items-center text-sm">
+                <span class="text-gray-300">${moto}</span>
+                <span class="text-white">R$ ${valorFormatado}</span>
+            </div>`;
+        });
+        $('#listaMotoboysModal').html(htmlMotoboys || '<div class="text-gray-500 text-sm">Nenhuma venda POS</div>');
 
-    // Exibe valores de dinheiro e devoluções
-    $('#totalDinheiroModal').text('R$ ' + totalDinheiroPago.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
-    $('#totalDevolucoesModal').text('R$ ' + totalDevolucoes.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
+        $('#totalDinheiroModal').text('R$ ' + totalDinheiroPago.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
+        $('#totalDevolucoesModal').text('R$ ' + totalDevolucoes.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
 
-    // SALDO FINAL = DINHEIRO + DEVOLUÇÕES
-    let saldoFinal = totalDinheiroPago + totalDevolucoes;
-    $('#totalCaixaLiquido').text('R$ ' + saldoFinal.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
+        // SALDO FINAL = DINHEIRO + DEVOLUÇÕES
+        let saldoFinal = totalDinheiroPago + totalDevolucoes;
+        $('#totalCaixaLiquido').text('R$ ' + saldoFinal.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
 
-    // Abre modal
-    $('#modalFecharCaixa').removeClass('hidden').addClass('flex');
-    setTimeout(() => {
-        $('#modalFecharContent').removeClass('scale-95 opacity-0').addClass('scale-100 opacity-100');
-    }, 50);
-}
+        // Abre modal
+        $('#modalFecharCaixa').removeClass('hidden').addClass('flex');
+        setTimeout(() => {
+            $('#modalFecharContent').removeClass('scale-95 opacity-0').addClass('scale-100 opacity-100');
+        }, 50);
+    }
 
     function fecharModalFecharCaixa() {
         $('#modalFecharContent').removeClass('scale-100 opacity-100').addClass('scale-95 opacity-0');
