@@ -22,12 +22,12 @@ $sucesso = '';
 
 if($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Sanitize os dados de entrada
-    $numero_loja = sanitizar($_POST['numero_loja'] ?? '');
-    $email = sanitizar($_POST['email'] ?? '');
+    $numero_loja = sanitiza($_POST['numero_loja'] ?? '');
+    $email = sanitiza($_POST['email'] ?? '');
     $senha = $_POST['senha'] ?? '';
     $confirmar = $_POST['confirmar_senha'] ?? '';
-    $pergunta = sanitizar($_POST['pergunta'] ?? '');
-    $resposta = sanitizar($_POST['resposta'] ?? '');
+    $pergunta = sanitiza($_POST['pergunta'] ?? '');
+    $resposta = sanitiza($_POST['resposta'] ?? '');
 
     // Validação da senha
     if(strlen($senha) < 8) {
