@@ -9,11 +9,10 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Configurações de conexão com o banco Render PostgreSQL
-define('DB_HOST', 'dpg-d6fojjh5pdvs73fli0ig-a.oregon-postgres.render.com');
-define('DB_PORT', '5432');
-define('DB_NAME', 'autogest_db_q243');
-define('DB_USER', 'autogest_db_q243_user');
-define('DB_PASS', 'rbIkz1BqFYeNMJbrhpBWFUVogQr9aPPI');
+$host = "dpg-d6fojjh5pdvs73fli0ig-a.oregon-postgres.render.com";
+$dbname = "autogest_db_q243";
+$user = "autogest_db_q243_user";
+$password = "rbIkz1BqFYeNMJbrhpBWFUVogQr9aPPI";
 
 // 🔹 Função utilitária de segurança (declarada apenas uma vez)
 if (!function_exists('sanitizar')) {
