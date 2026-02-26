@@ -1,5 +1,14 @@
 <?php
 
+function sanitiza($valor)
+{
+    return htmlspecialchars(
+        trim($valor),
+        ENT_QUOTES,
+        'UTF-8'
+    );
+}
+
 define('DB_HOST', 'dpg-d6fojjh5pdvs73fli0ig-a.oregon-postgres.render.com');
 define('DB_NAME', 'autogest_db_q243');
 define('DB_USER', 'autogest_db_q243_user');
@@ -8,7 +17,7 @@ define('DB_PASS', 'rbIkz1BqFYeNMJbrhpBWFUVogQr9aPPI');
 try {
 
     $pdo = new PDO(
-        "pgsql:host=".DB_HOST.";port=5432;dbname=".DB_NAME.";sslmode=require",
+        "pgsql:host=" . DB_HOST . ";port=5432;dbname=" . DB_NAME . ";sslmode=require",
         DB_USER,
         DB_PASS,
         [
@@ -19,6 +28,7 @@ try {
 
 } catch (PDOException $e) {
 
-    die("Erro conexão banco: ".$e->getMessage());
-
+    die("Erro conexão banco: " . $e->getMessage());
 }
+
+?>
