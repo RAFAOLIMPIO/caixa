@@ -3,7 +3,7 @@
 define('DB_HOST', 'dpg-d6fojjh5pdvs73fli0ig-a.oregon-postgres.render.com');
 define('DB_NAME', 'autogest_db_q243');
 define('DB_USER', 'autogest_db_q243_user');
-define('DB_PASS', 'SUA_SENHA_AQUI');
+define('DB_PASS', 'rbIkz1BqFYeNMJbrhpBWFUVogQr9aPPI');
 
 try {
 
