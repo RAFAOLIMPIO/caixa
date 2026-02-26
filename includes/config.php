@@ -1,12 +1,12 @@
 <?php
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 function sanitiza($valor)
 {
-    return htmlspecialchars(
-        trim($valor),
-        ENT_QUOTES,
-        'UTF-8'
-    );
+    return htmlspecialchars(trim($valor), ENT_QUOTES, 'UTF-8');
 }
 
 define('DB_HOST', 'dpg-d6fojjh5pdvs73fli0ig-a.oregon-postgres.render.com');
