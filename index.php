@@ -2,7 +2,7 @@
 // index.php - Versão corrigida
 
 // Função de sanitização (adicionada no início)
-function sanitizar($dado) {
+function sanitiza($dado) {
     if (is_string($dado)) {
         $dado = trim($dado);
         $dado = stripslashes($dado);
@@ -47,7 +47,7 @@ $erro = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Sanitizando o input
-    $numero_loja = isset($_POST['numero_loja']) ? sanitizar($_POST['numero_loja']) : '';
+    $numero_loja = isset($_POST['numero_loja']) ? sanitiza($_POST['numero_loja']) : '';
     $senha = isset($_POST['senha']) ? $_POST['senha'] : '';
 
     // Validação básica
