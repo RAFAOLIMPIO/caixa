@@ -19,7 +19,7 @@ require_once __DIR__ . '/includes/config.php';
 |--------------------------------------------------------------------------
 */
 if (isset($_SESSION['usuario'])) {
-    header("Location: menu.php");
+    header("Location: index.php");
     exit;
 }
 
