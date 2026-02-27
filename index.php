@@ -162,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 
                 <div class="flex items-center justify-between">
                     <label class="flex items-center text-sm text-gray-300">
-                        <!-- ⚠️ O name do checkbox precisa ser "remember" -->
+                        <!-- sinaliza -->
                         <input type="checkbox" name="remember" class="mr-2 rounded bg-gray-700 border-gray-600 text-purple-500 focus:ring-purple-500">
                         Lembrar minha conta
                     </label>
