@@ -6,9 +6,6 @@ error_reporting(E_ALL);
 session_start();  
 include 'includes/config.php';  
   
-echo "CHEGUEI AQUI";  
-exit;  
-  
   
 // Verificar se já está logado ANTES de qualquer output  
 if (isset($_SESSION['usuario'])) {  
