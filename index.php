@@ -1,23 +1,11 @@
-
 <?php
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// index.php - Versão corrigida
-
-// Função de sanitização (adicionada no início)
-function sanitiza($dado) {
-    if (is_string($dado)) {
-        $dado = trim($dado);
-        $dado = stripslashes($dado);
-        $dado = htmlspecialchars($dado, ENT_QUOTES, 'UTF-8');
-    }
-    return $dado;
-}
-
 session_start();
 include 'includes/config.php';
+
 
 // Verificar se já está logado ANTES de qualquer output
 if (isset($_SESSION['usuario'])) {
