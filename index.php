@@ -3,10 +3,12 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);  
 error_reporting(E_ALL);  
   
-session_start();  
-include 'includes/config.php';  
-  
-  
+session_start();
+include 'includes/config.php';
+
+$erro = ''; // <-- ADICIONE ISSO
+
+
 // Verificar se já está logado ANTES de qualquer output  
 if (isset($_SESSION['usuario'])) {  
     header("Location: menu.php");  
