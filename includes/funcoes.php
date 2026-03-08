@@ -20,11 +20,12 @@ function obter_autozoners($pdo, $numero_loja) {
         $stmt = $pdo->prepare("
             SELECT id, nome, tipo, cargo 
             FROM funcionarios 
-            WHERE numero_loja = ? AND tipo = 'autozoner' AND ativo = TRUE
+            WHERE numero_loja = ? 
+            AND tipo = 'autozoner'
             ORDER BY nome
         ");
         $stmt->execute([$numero_loja]);
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
         error_log("Erro ao buscar autozoners: " . $e->getMessage());
         return [];
@@ -36,11 +37,12 @@ function obter_motoboys($pdo, $numero_loja) {
         $stmt = $pdo->prepare("
             SELECT id, nome, tipo, cargo 
             FROM funcionarios 
-            WHERE numero_loja = ? AND tipo = 'motoboy' AND ativo = TRUE
+            WHERE numero_loja = ? 
+            AND tipo = 'motoboy'
             ORDER BY nome
         ");
         $stmt->execute([$numero_loja]);
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
         error_log("Erro ao buscar motoboys: " . $e->getMessage());
         return [];
@@ -50,11 +52,7 @@ function obter_motoboys($pdo, $numero_loja) {
 function manter_sessao_ativa() {
     echo '<script>
     setInterval(function() {
-        fetch("keep_alive.php")
-            .then(response => response.json())
-            .then(data => console.log("Sessão mantida:", data.time))
-            .catch(err => console.error("Erro sessão:", err));
+        fetch("keep_alive.php");
     }, 300000);
     </script>';
 }
-?>
