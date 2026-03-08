@@ -42,27 +42,37 @@ if (empty($_SESSION['usuario']['numero_loja'])) {
             <p class="text-gray-400">Bem-vindo, <span class="text-purple-400 font-semibold"><?= htmlspecialchars($_SESSION['usuario']['numero_loja']) ?></span> 👋</p>
         </div>
 
-        <!-- Cards -->
-        <div class="cards">
-
-            <a href="caixa.php" class="card">
-                <div class="icon">💰</div>
-                <h3>Controle de Caixa</h3>
-                <p>Registre vendas e controle pagamentos</p>
+        <!-- Menu Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <a href="caixa.php" class="glass-effect p-6 rounded-2xl card-hover group fade-in">
+                <div class="text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                        <i class="fas fa-cash-register text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-2">Controle de Caixa</h3>
+                    <p class="text-gray-400 text-sm">Registre vendas e controle pagamentos</p>
+                </div>
             </a>
 
-            <a href="relatorio.php" class="card">
-                <div class="icon">📊</div>
-                <h3>Relatórios</h3>
-                <p>Analise vendas e desempenho</p>
+            <a href="relatorio.php" class="glass-effect p-6 rounded-2xl card-hover group fade-in" style="animation-delay: 0.1s">
+                <div class="text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-500 to-teal-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                        <i class="fas fa-chart-line text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-2">Relatórios</h3>
+                    <p class="text-gray-400 text-sm">Analise vendas e desempenho</p>
+                </div>
             </a>
 
-            <a href="funcionarios.php" class="card">
-                <div class="icon">👥</div>
-                <h3>Funcionários</h3>
-                <p>Gerencie sua equipe</p>
+            <a href="funcionarios.php" class="glass-effect p-6 rounded-2xl card-hover group fade-in" style="animation-delay: 0.2s">
+                <div class="text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                        <i class="fas fa-users-cog text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-2">Funcionários</h3>
+                    <p class="text-gray-400 text-sm">Gerencie sua equipe</p>
+                </div>
             </a>
-
         </div>
 
         <!-- Logout -->
