@@ -1,17 +1,10 @@
-<?php
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/funcoes.php';
 
 verificar_login();
 
-$usuario_id = $_SESSION['usuario']['id'];
-$numero_loja = $_SESSION['usuario']['numero_loja'];
-
-$usuario = usuario_atual();
-$usuario_id = $usuario['id'];
-$numero_loja = $usuario['numero_loja'];
-
-
+$erro = '';
+$sucesso = '';
 // Verificar se usuário existe
 try {
     $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE id = ?");
