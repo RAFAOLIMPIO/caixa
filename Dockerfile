@@ -1,36 +1,14 @@
-FROM php:8.2-apache
+# Usar uma imagem oficial do PHP com Apache
+FROM php:8.1-apache
 
-# Timezone
-ENV TZ=America/Sao_Paulo
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# Instalar extensões do PHP
+RUN docker-php-ext-install mysqli pdo pdo_mysql
 
-# Instalar pacotes necessários
-RUN apt-get update && apt-get install -y \
-    libpq-dev \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    libzip-dev \
-    libonig-dev \
-    zip unzip curl \
-    ca-certificates \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd mbstring zip pdo_pgsql pgsql opcache \
-    && rm -rf /var/lib/apt/lists/*
-
-# Habilitar módulos Apache
-RUN a2enmod rewrite headers expires
-
-# Copiar projeto
+# Copiar os arquivos do projeto para o servidor
 COPY . /var/www/html/
 
-# Permissões
-RUN chown -R www-data:www-data /var/www/html && chmod -R 755 /var/www/html
-
-# Usar php.ini de produção
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
-
-WORKDIR /var/www/html
+# Expor a porta 80
 EXPOSE 80
 
+# Comando para iniciar o Apache
 CMD ["apache2-foreground"]
