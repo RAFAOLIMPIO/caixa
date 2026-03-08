@@ -1,15 +1,13 @@
 <?php
-// relatorio.php - VERSÃO COMPLETA E CORRIGIDA
-require_once __DIR__ . '/includes/config.php';
+// relatorio.php
 
-if (!isset($_SESSION['usuario'])) {
-    header("Location: index.php");
-    exit();
-}
+require_once __DIR__ . '/includes/config.php';
+require_once __DIR__ . '/includes/funcoes.php';
+
+verificar_login();
 
 $usuario_id = $_SESSION['usuario']['id'];
 $numero_loja = $_SESSION['usuario']['numero_loja'];
-
 // Buscar autozoners para edição
 try {
     $stmtAutozoners = $pdo->prepare("
