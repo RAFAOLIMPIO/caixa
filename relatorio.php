@@ -1,8 +1,11 @@
 <?php
+// relatorio.php - VERSÃO COMPLETA E CORRIGIDA
 require_once __DIR__ . '/includes/config.php';
-require_once __DIR__ . '/includes/funcoes.php';
 
-verificar_login();
+if (!isset($_SESSION['usuario'])) {
+    header("Location: index.php");
+    exit();
+}
 
 $usuario_id = $_SESSION['usuario']['id'];
 $numero_loja = $_SESSION['usuario']['numero_loja'];
