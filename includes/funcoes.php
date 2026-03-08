@@ -1,14 +1,11 @@
 <?php
 // includes/funcoes.php
 
-function validar_campos_obrigatorios($campos, $mensagens) {
-    $erros = [];
-    foreach ($campos as $campo => $mensagem) {
-        if (empty($_POST[$campo])) {
-            $erros[] = $mensagem;
-        }
+function verificar_login() {
+    if (!isset($_SESSION['usuario'])) {
+        header("Location: index.php");
+        exit();
     }
-    return $erros;
 }
 
 function calcular_troco($valor, $valor_pago) {
@@ -57,7 +54,7 @@ function manter_sessao_ativa() {
             .then(response => response.json())
             .then(data => console.log("Sessão mantida:", data.time))
             .catch(err => console.error("Erro sessão:", err));
-    }, 300000); // 5 minutos
+    }, 300000);
     </script>';
 }
 ?>
