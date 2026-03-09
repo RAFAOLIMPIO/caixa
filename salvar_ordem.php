@@ -1,50 +1,25 @@
 <?php
-require 'includes/config.php';
+require_once __DIR__ . '/includes/config.php';
+require_once __DIR__ . '/includes/funcoes.php';
 
-$data = json_decode(file_get_contents('php://input'), true);
+verificar_login();
 
-if (!isset($_SESSION['usuario']['id'])) {
-    echo json_encode(['error' => 'Não autorizado']);
-    exit();
+$data = json_decode(file_get_contents("php://input"), true);
+
+if (!is_array($data)) {
+    echo json_encode(["ok" => false, "error" => "Dados inválidos"]);
+    exit;
 }
 
-$usuario_id = $_SESSION['usuario']['id'];
-
-if (isset($data['ordem']) && is_array($data['ordem'])) {
-
-    $data = $data['ordem'];
-
-    try {
-        $pdo->beginTransaction();
-
-        foreach ($data as $index => $item) {
-
-            $id = (int)$item['id'];
-
-            $stmt = $pdo->prepare("
-                UPDATE vendas
-                SET ordem = ?
-                WHERE id = ?
-                AND usuario_id = ?
-            ");
-
-            $stmt->execute([$index, $id, $usuario_id]);
-        }
-
-        $pdo->commit();
-
-       echo json_encode(['ok' => true]);
-
-
-    } catch (Exception $e) {
-        $pdo->rollBack();
-      echo json_encode([
-    'ok' => false,
-    'error' => $e->getMessage()
-]);
-
+try {
+    $pdo->beginTransaction();
+    foreach ($data as $item) {
+        $stmt = $pdo->prepare("UPDATE vendas SET ordem = ? WHERE id = ? AND usuario_id = ?");
+        $stmt->execute([$item['ordem'], $item['id'], $_SESSION['usuario_id']]);
     }
-
-} else {
-    echo json_encode(['error' => 'Dados inválidos']);
+    $pdo->commit();
+    echo json_encode(["ok" => true]);
+} catch (Exception $e) {
+    $pdo->rollBack();
+    echo json_encode(["ok" => false, "error" => $e->getMessage()]);
 }
