@@ -1,15 +1,17 @@
+<?php
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/funcoes.php';
 
 verificar_login();
 
-$usuario_id = $_SESSION['usuario']['id'];
-$numero_loja = $_SESSION['usuario']['numero_loja'];
-
-$erro = '';
-$sucesso = '';
+// Inicializa variáveis
 $erros = [];
+$sucesso = '';
+$editar = null;
 
+// Garantir que as variáveis da sessão existam
+$usuario_id = $_SESSION['usuario_id'] ?? 0;
+$numero_loja = $_SESSION['numero_loja'] ?? '';
 
 // Verificar se usuário existe
 try {
@@ -36,14 +38,14 @@ if (isset($_GET['editar'])) {
         
         if (!$editar) {
             $erros[] = "Funcionário não encontrado ou sem permissão.";
-            unset($editar);
+            $editar = null;
         }
     } catch (PDOException $e) {
         $erros[] = "Erro ao buscar funcionário para edição: " . $e->getMessage();
     }
 }
 
-// CADASTRO / EDIÇÃO via POST
+// Processar POST (cadastro/edição)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = trim($_POST['nome'] ?? '');
     $tipo = $_POST['tipo'] ?? '';
@@ -77,8 +79,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $usuario_id
                 ]);
                 
-                $sucesso = "Funcionário atualizado com sucesso.";
-                unset($editar); // Limpar modo edição
+                $_SESSION['mensagem_sucesso'] = "Funcionário atualizado com sucesso.";
+                header("Location: funcionarios.php");
+                exit();
                 
             } else {
                 // CADASTRO NOVO
@@ -95,20 +98,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $numero_loja
                 ]);
                 
-                $sucesso = "Funcionário cadastrado com sucesso.";
+                $_SESSION['mensagem_sucesso'] = "Funcionário cadastrado com sucesso.";
+                header("Location: funcionarios.php");
+                exit();
             }
-            
-            // Redirecionar para evitar reenvio do formulário
-            header("Location: funcionarios.php?success=" . urlencode($sucesso));
-            exit();
             
         } catch (PDOException $e) {
             $erros[] = "Erro ao salvar funcionário: " . $e->getMessage();
         }
+    } else {
+        // Em caso de erro, manter os dados no formulário
+        $editar = [
+            'id' => $funcionario_id,
+            'nome' => $nome,
+            'tipo' => $tipo,
+            'cargo' => $cargo
+        ];
     }
 }
 
-// EXCLUSÃO via GET
+// Processar exclusão via GET
 if (isset($_GET['excluir'])) {
     $id = (int)$_GET['excluir'];
     
@@ -134,17 +143,17 @@ if (isset($_GET['excluir'])) {
                     $erros[] = "Não é possível excluir. Existem vendas vinculadas a este autozoner.";
                 } else {
                     $pdo->prepare("DELETE FROM funcionarios WHERE id = ?")->execute([$id]);
-                    $sucesso = "Funcionário excluído com sucesso.";
+                    $_SESSION['mensagem_sucesso'] = "Funcionário excluído com sucesso.";
+                    header("Location: funcionarios.php");
+                    exit();
                 }
             } else {
                 // Motoboy - pode excluir diretamente
                 $pdo->prepare("DELETE FROM funcionarios WHERE id = ?")->execute([$id]);
-                $sucesso = "Funcionário excluído com sucesso.";
+                $_SESSION['mensagem_sucesso'] = "Funcionário excluído com sucesso.";
+                header("Location: funcionarios.php");
+                exit();
             }
-            
-            // Redirecionar após exclusão
-            header("Location: funcionarios.php?success=" . urlencode($sucesso));
-            exit();
         } else {
             $erros[] = "Funcionário não encontrado ou sem permissão.";
         }
@@ -153,9 +162,10 @@ if (isset($_GET['excluir'])) {
     }
 }
 
-// Verificar mensagem de sucesso via GET
-if (isset($_GET['success'])) {
-    $sucesso = $_GET['success'];
+// Recuperar mensagem de sucesso da sessão
+if (isset($_SESSION['mensagem_sucesso'])) {
+    $sucesso = $_SESSION['mensagem_sucesso'];
+    unset($_SESSION['mensagem_sucesso']);
 }
 
 // LISTAR FUNCIONÁRIOS
@@ -195,8 +205,7 @@ try {
         }
         
         if ($func['tipo'] === 'motoboy') {
-            // Correção importante: usar o campo correto para motoboy
-            // Assumindo que a tabela vendas tem um campo 'motoboy' que armazena o NOME do motoboy
+            // Usando nome para consulta - ideal seria usar ID, mas mantido por compatibilidade
             $stmt = $pdo->prepare("
                 SELECT COUNT(*) as total 
                 FROM vendas 
@@ -290,6 +299,7 @@ try {
             </a>
         </div>
 
+        <!-- Mensagens de Erro -->
         <?php if (!empty($erros)): ?>
             <div class="bg-red-500 bg-opacity-20 border border-red-500 text-red-200 p-4 rounded-lg mb-6">
                 <div class="flex items-start">
@@ -297,13 +307,14 @@ try {
                     <div>
                         <p class="font-semibold mb-2">Atenção:</p>
                         <?php foreach ($erros as $err): ?>
-                            <p class="text-sm">• <?= $err ?></p>
+                            <p class="text-sm">• <?= htmlspecialchars($err) ?></p>
                         <?php endforeach; ?>
                     </div>
                 </div>
             </div>
         <?php endif; ?>
 
+        <!-- Mensagem de Sucesso -->
         <?php if ($sucesso): ?>
             <div class="bg-green-500 bg-opacity-20 border border-green-500 text-green-200 p-4 rounded-lg mb-6">
                 <div class="flex items-center">
@@ -316,8 +327,8 @@ try {
         <!-- Formulário -->
         <div class="glass-effect p-6 rounded-2xl mb-8">
             <h2 class="text-xl font-bold text-white mb-4">
-                <i class="fas fa-<?= empty($editar) ? 'plus' : 'edit' ?> mr-2"></i> 
-                <?= empty($editar) ? 'Cadastrar Novo Funcionário' : 'Editar Funcionário' ?>
+                <i class="fas fa-<?= $editar ? 'edit' : 'plus' ?> mr-2"></i> 
+                <?= $editar ? 'Editar Funcionário' : 'Cadastrar Novo Funcionário' ?>
             </h2>
             <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input type="hidden" name="funcionario_id" value="<?= htmlspecialchars($editar['id'] ?? '') ?>">
@@ -346,13 +357,13 @@ try {
                 </div>
                 
                 <div class="md:col-span-2 flex justify-end space-x-4">
-                    <?php if (!empty($editar)): ?>
+                    <?php if ($editar): ?>
                         <a href="funcionarios.php" class="px-6 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition duration-200">
                             Cancelar
                         </a>
                     <?php endif; ?>
                     <button type="submit" class="btn-modern">
-                        <i class="fas fa-save mr-2"></i><?= empty($editar) ? 'Cadastrar' : 'Atualizar' ?>
+                        <i class="fas fa-save mr-2"></i><?= $editar ? 'Atualizar' : 'Cadastrar' ?>
                     </button>
                 </div>
             </form>
@@ -417,7 +428,7 @@ try {
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <a href="?excluir=<?= $funcionario['id'] ?>" 
-                                       onclick="return confirmExclusao(<?= $funcionario['id'] ?>, '<?= addslashes($funcionario['nome']) ?>', <?= $total_vendas ?>, '<?= $funcionario['tipo'] ?>')"
+                                       onclick="return confirmExclusao(<?= $funcionario['id'] ?>, <?= json_encode($funcionario['nome']) ?>, <?= $total_vendas ?>, '<?= $funcionario['tipo'] ?>')"
                                        class="text-red-400 hover:text-red-300 transition duration-200 p-1 rounded"
                                        title="Excluir">
                                         <i class="fas fa-trash"></i>
@@ -481,6 +492,7 @@ try {
                     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Salvando...';
                     submitBtn.disabled = true;
                     
+                    // Reabilita após 5 segundos caso algo dê errado
                     setTimeout(() => {
                         submitBtn.innerHTML = originalText;
                         submitBtn.disabled = false;
