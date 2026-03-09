@@ -1,4 +1,8 @@
 <?php
+// Garantir que a sessão seja iniciada corretamente
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -15,7 +19,6 @@ define('DB_USER', 'autogest_db_q243_user');
 define('DB_PASS', 'rbIkz1BqFYeNMJbrhpBWFUVogQr9aPPI');
 
 try {
-
     $pdo = new PDO(
         "pgsql:host=" . DB_HOST . ";port=5432;dbname=" . DB_NAME . ";sslmode=require",
         DB_USER,
@@ -25,10 +28,7 @@ try {
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
         ]
     );
-
 } catch (PDOException $e) {
-
     die("Erro conexão banco: " . $e->getMessage());
 }
-
 ?>
