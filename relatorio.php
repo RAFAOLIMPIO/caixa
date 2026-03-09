@@ -852,13 +852,11 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
     
     // ========== SORTABLE (REORDENAÇÃO) ==========
     document.addEventListener("DOMContentLoaded", function () {
-        const lista = document.getElementById("lista-vendas");
-        if (lista && <?= !empty($vendas) ? 'true' : 'false' ?>) {
-            new Sortable(lista, {
+        const tabela = document.getElementById("lista-vendas");
+        if (!tabela) return;
+        if (<?= !empty($vendas) ? 'true' : 'false' ?>) {
+            new Sortable(tabela, {
                 animation: 150,
-                ghostClass: 'sortable-ghost',
-                chosenClass: 'sortable-chosen',
-                dragClass: 'sortable-drag',
                 onEnd: function () {
                     let ordem = [];
                     document.querySelectorAll("#lista-vendas tr").forEach((row, index) => {
@@ -867,24 +865,11 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                             ordem: index
                         });
                     });
-                    
                     fetch("salvar_ordem.php", {
                         method: "POST",
                         credentials: "include",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(ordem)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.ok) {
-                            mostrarNotificacao('Ordem salva com sucesso!', 'success');
-                        } else {
-                            mostrarNotificacao('Erro ao salvar ordem: ' + (data.error || 'desconhecido'), 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Erro ao salvar ordem:', error);
-                        mostrarNotificacao('Erro ao salvar ordem', 'error');
                     });
                 }
             });
