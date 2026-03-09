@@ -8,6 +8,7 @@ verificar_login();
 
 $usuario_id = $_SESSION['usuario']['id'];
 $numero_loja = $_SESSION['usuario']['numero_loja'];
+
 // Buscar autozoners para edição
 try {
     $stmtAutozoners = $pdo->prepare("
@@ -44,7 +45,7 @@ try {
     </div>");
 }
 
-// CALCULAR TOTAIS (MODIFICADO)
+// CALCULAR TOTAIS
 $total_vendas = 0;
 $total_pago = 0;
 $total_pendente = 0;
@@ -154,7 +155,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
             background: rgba(16, 185, 129, 0.1);
             z-index: 0;
         }
-        .checkbox-custom {
+        .checkbox-pago {
             width: 20px;
             height: 20px;
             cursor: pointer;
@@ -432,7 +433,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                             <th class="p-3 text-left text-white font-semibold">Ações</th>
                         </tr>
                     </thead>
-                    <tbody id="tabelaVendas" class="sortable-table">
+                    <tbody id="lista-vendas" class="sortable-table">
                         <?php if (empty($vendas)): ?>
                             <tr>
                                 <td colspan="8" class="text-center py-12">
@@ -513,9 +514,9 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                                     <div class="flex items-center">
                                         <?php if ($status !== 'devolvido'): ?>
                                         <input type="checkbox" 
-                                               class="checkbox-custom mr-2" 
-                                               <?= $pago ? 'checked' : '' ?>
-                                               onchange="togglePago(<?= $v['id'] ?>, this.checked)">
+                                               class="checkbox-pago mr-2" 
+                                               data-id="<?= $v['id'] ?>"
+                                               <?= $pago ? 'checked' : '' ?>>
                                         <?php endif; ?>
                                         <span class="text-sm font-medium <?= 
                                             $status === 'devolvido' ? 'text-gray-400' : 
@@ -773,7 +774,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         </div>
     </div>
 
-    <!-- ========== MODAL FECHAR CAIXA (CORRIGIDO) ========== -->
+    <!-- ========== MODAL FECHAR CAIXA ========== -->
     <div id="modalFecharCaixa" class="fixed inset-0 z-50 hidden items-center justify-center">
         <div class="fixed inset-0 bg-black bg-opacity-70" onclick="fecharModalFecharCaixa()"></div>
         <div class="relative glass-effect rounded-2xl p-6 w-full max-w-lg transform transition-all duration-300 scale-95 opacity-0" id="modalFecharContent">
@@ -799,7 +800,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
                 </div>
             </div>
 
-            <!-- Seção Dinheiro + Devoluções (CÁLCULO CORRETO) -->
+            <!-- Seção Dinheiro + Devoluções -->
             <div class="mb-4 bg-gray-800 bg-opacity-30 p-4 rounded-xl">
                 <div class="flex items-center mb-3">
                     <div class="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center mr-3">
@@ -832,7 +833,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         </div>
     </div>
 
-    <!-- ========== SCRIPT ========== -->
+    <!-- ========== SCRIPT PRINCIPAL ========== -->
     <script>
     // Variáveis globais
     let currentObsId = null;
@@ -849,44 +850,83 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         }
     }
     
-    // Função para toggle Pago
-    function togglePago(id, pago) {
-        showLoading(true);
-        
-        $.post('api_vendas.php', {
-            action: 'toggle_pago',
-            id: id,
-            pago: pago ? 1 : 0
-        }).done(function(response){
-            showLoading(false);
-            if (response.ok) {
-                location.reload();
-            } else {
-                alert('Erro: ' + response.error);
-            }
-        }).fail(function(jqXHR, textStatus, errorThrown){
-            showLoading(false);
-            console.error('Erro AJAX:', textStatus, errorThrown);
-            alert('Erro de conexão. Verifique o console para detalhes.');
-        });
-    }
-    
-    // Inicializar SortableJS para arrastar linhas
-    document.addEventListener('DOMContentLoaded', function() {
-        const tbody = document.getElementById('tabelaVendas');
-        if (tbody && <?= !empty($vendas) ? 'true' : 'false' ?>) {
-            new Sortable(tbody, {
+    // ========== SORTABLE (REORDENAÇÃO) ==========
+    document.addEventListener("DOMContentLoaded", function () {
+        const lista = document.getElementById("lista-vendas");
+        if (lista && <?= !empty($vendas) ? 'true' : 'false' ?>) {
+            new Sortable(lista, {
                 animation: 150,
                 ghostClass: 'sortable-ghost',
                 chosenClass: 'sortable-chosen',
                 dragClass: 'sortable-drag',
-                onEnd: function(evt) {
-                    salvarOrdemVendas();
+                onEnd: function () {
+                    let ordem = [];
+                    document.querySelectorAll("#lista-vendas tr").forEach((row, index) => {
+                        ordem.push({
+                            id: row.dataset.id,
+                            ordem: index
+                        });
+                    });
+                    
+                    fetch("salvar_ordem.php", {
+                        method: "POST",
+                        credentials: "include",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(ordem)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.ok) {
+                            mostrarNotificacao('Ordem salva com sucesso!', 'success');
+                        } else {
+                            mostrarNotificacao('Erro ao salvar ordem: ' + (data.error || 'desconhecido'), 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao salvar ordem:', error);
+                        mostrarNotificacao('Erro ao salvar ordem', 'error');
+                    });
                 }
             });
         }
+
+        // ========== CHECKBOX PAGO ==========
+        document.querySelectorAll(".checkbox-pago").forEach(cb => {
+            cb.addEventListener("change", function () {
+                fetch("marcar_pago.php", {
+                    method: "POST",
+                    credentials: "include",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        id: this.dataset.id,
+                        pago: this.checked
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ok) {
+                        mostrarNotificacao('Status atualizado!', 'success');
+                        // Atualizar a linha visualmente
+                        const row = this.closest('tr');
+                        if (this.checked) {
+                            row.classList.remove('status-pendente');
+                            row.classList.add('status-pago');
+                        } else {
+                            row.classList.remove('status-pago');
+                            row.classList.add('status-pendente');
+                        }
+                    } else {
+                        mostrarNotificacao('Erro ao atualizar status', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    mostrarNotificacao('Erro de conexão', 'error');
+                });
+            });
+        });
         
-        // Configurar exclusão de vendas
+        // Configurar exclusão de vendas (mantido com jQuery)
         $(document).on('click', '.excluir-venda', function() {
             const id = $(this).data('id');
             const cliente = $(this).data('cliente');
@@ -912,41 +952,6 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
             }
         });
     });
-    
-    // ---------- SALVAR ORDEM (VIA salvar_ordem.php) ----------
-    function salvarOrdemVendas() {
-        const rows = document.querySelectorAll('.sortable-row');
-        const ordem = [];
-        
-        rows.forEach((row, index) => {
-            ordem.push({
-                id: row.dataset.id,
-                ordem: index
-            });
-        });
-        
-        $.ajax({
-            url: 'salvar_ordem.php',   // ✅ Endpoint separado
-            method: 'POST',
-            data: JSON.stringify({
-                action: 'salvar_ordem',
-                ordem: ordem
-            }),
-            contentType: 'application/json',
-            dataType: 'json',
-            success: function(response) {
-                if (response.ok) {
-                    mostrarNotificacao('Ordem salva com sucesso!', 'success');
-                } else {
-                    mostrarNotificacao('Erro: ' + response.error, 'error');
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Erro ao salvar ordem:', error);
-                mostrarNotificacao('Erro ao salvar ordem', 'error');
-            }
-        });
-    }
     
     // Formatar moeda
     function formatarMoeda(input) {
@@ -1320,7 +1325,7 @@ $total_geral = $total_vendas + $total_devolvido + $total_parcial;
         }
     });
 
-    // ---------- 💰 MODAL FECHAR CAIXA (CÁLCULO CORRETO) ----------
+    // ---------- 💰 MODAL FECHAR CAIXA ----------
     function abrirModalFecharCaixa() {
         let totalPOS = 0;
         let totalDinheiroPago = 0;
