@@ -106,17 +106,20 @@ function obter_motoboys($pdo, $numero_loja) {
 |--------------------------------------------------------------------------
 | MANTER SESSÃO ATIVA
 |--------------------------------------------------------------------------
-*/
 function manter_sessao_ativa() {
-
-    echo '
-    <script>
+    echo '<script>
     setInterval(function() {
         fetch("keep_alive.php")
-        .then(response => response.json())
-        .then(data => console.log("Sessão ativa"))
-        .catch(err => console.log("Erro keep alive"));
+            .then(response => response.json())
+            .then(data => console.log("Sessão mantida:", data.time))
+            .catch(err => console.error("Erro sessão:", err));
     }, 300000);
-    </script>
-    ';
+    </script>';
+}
+
+function sanitizar($valor) {
+    if (is_array($valor)) {
+        return array_map('sanitizar', $valor);
+    }
+    return htmlspecialchars(trim($valor), ENT_QUOTES, 'UTF-8');
 }
