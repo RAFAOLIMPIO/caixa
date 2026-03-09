@@ -1,19 +1,27 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 require_once __DIR__ . '/includes/config.php';
-
-
-$erros = [];
-$sucesso = '';
-$editar = null;
+require_once __DIR__ . '/includes/funcoes.php';
 
 verificar_login();
 
-$usuario = usuario_atual();
-$usuario_id = $usuario['id'];
-$numero_loja = $usuario['numero_loja'];
+/* ==========================
+   VARIÁVEIS DA SESSÃO
+========================== */
+
+$usuario_id = $_SESSION['usuario']['id'] ?? 0;
+$numero_loja = $_SESSION['usuario']['numero_loja'] ?? '';
+
+/* ==========================
+   CONTROLE DE ERROS
+========================== */
+
+$erros = [];
+$sucesso = '';
+$funcionarios = [];
+$estatisticas = [];
+$entregas_motoboys = [];
+$editar = null;
+
 
 
 // Verificar se usuário existe
